@@ -39,9 +39,14 @@
       return resp;
   }
 
+  function filterJson(jsonObject, keysToInclude) {
+    return Object.keys(jsonObject).reduce((acc, key) => (keysToInclude.includes(key) && (acc[key] = jsonObject[key]), acc), {});
+  }
+
   async function fetchMe() {
       const data = await fetchAPI('https://www.webhallen.com/api/me');
-      return data;
+      const filteredData = filterJson(data.user, ['id', 'experiencePoints']);
+      return filteredData;
   }
 
   async function fetchOrders(whId) {
@@ -257,8 +262,8 @@
       });
 
       output.total = output.purchases + output.bonusXP + output.achievements + output.supplyDrops;
-      if (output.total < me.user.experiencePoints) {
-          output.other = me.user.experiencePoints - output.total;
+      if (output.total < me.experiencePoints) {
+          output.other = me.experiencePoints - output.total;
           output.total += output.other;
       }
 
@@ -723,9 +728,9 @@
 
       injectPath.appendChild(svg);
 
-      let orders = await fetchOrders(ME.user.id);
-      let supplyDrops = await fetchSupplyDrops(ME.user.id);
-      let achievements = await fetchAchievements(ME.user.id);
+      let orders = await fetchOrders(ME.id);
+      let supplyDrops = await fetchSupplyDrops(ME.id);
+      let achievements = await fetchAchievements(ME.id);
 
       injectPath.innerHTML = content;
 
