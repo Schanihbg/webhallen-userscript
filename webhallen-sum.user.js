@@ -154,7 +154,7 @@
       return sortedGroupedData;
   }
 
-  function findCategoriesByPeriod(orders, beginDate = "1999-01-01", endDate = new Date().toLocaleDateString()) {
+  function findCategoriesByPeriod(orders, beginDate = "1999-01-01", endDate = new Date()) {
       const catStartDate = Date.parse(beginDate);
       const catEndDate = Date.parse(endDate);
 
