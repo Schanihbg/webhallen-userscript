@@ -12,8 +12,8 @@
 (function() {
   'use strict';
 
-  var ME = null;
-  var MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+  let ME = null;
+  let MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
 
   async function fetchAPI(uri, params = null) {
       let resp;
@@ -297,8 +297,8 @@
   }
 
   function addSortingFunctionality(table, headers) {
-    var thead = table.querySelector("thead");
-    var headerRow = thead.querySelector("tr");
+    let thead = table.querySelector("thead");
+    let headerRow = thead.querySelector("tr");
 
     headerRow.childNodes.forEach(function (header, index) {
       header.addEventListener("click", function () {
@@ -307,7 +307,7 @@
     });
 
     function sortTable(table, columnIndex, headers) {
-      var rows,
+      let rows,
         switching,
         i,
         x,
@@ -327,8 +327,8 @@
           x = rows[i].getElementsByTagName("td")[columnIndex];
           y = rows[i + 1].getElementsByTagName("td")[columnIndex];
 
-          var xContent = x.textContent.toLowerCase();
-          var yContent = y.textContent.toLowerCase();
+          let xContent = x.textContent.toLowerCase();
+          let yContent = y.textContent.toLowerCase();
 
           // Check if sorting is for string or number
           if (columnIndex === 0) {
@@ -356,26 +356,26 @@
       }
 
       // Update header text with arrow indicator
-      var arrow = dir === "asc" ? "▲" : "▼";
+      let arrow = dir === "asc" ? "▲" : "▼";
       headerRow.childNodes.forEach(function (header, index) {
-        var arrowIndicator = index === columnIndex ? arrow : "";
+        let arrowIndicator = index === columnIndex ? arrow : "";
         header.textContent = headers[index] + arrowIndicator;
       });
     }
   }
 
   function generateMonthsTable(jsonData) {
-      var table = document.createElement('table');
+      let table = document.createElement('table');
       table.className = "table table-condensed table-striped tech-specs-table";
 
-      var thead = document.createElement('thead');
-      var headerRow = document.createElement('tr');
-      var headers = ['År Månad', 'Totalt antal ordrar', 'Total summa'];
-      var finalSum = 0;
-      var finalOrders = 0;
+      let thead = document.createElement('thead');
+      let headerRow = document.createElement('tr');
+      let headers = ['År Månad', 'Totalt antal ordrar', 'Total summa'];
+      let finalSum = 0;
+      let finalOrders = 0;
 
       headers.forEach(function(header) {
-          var th = document.createElement('th');
+          let th = document.createElement('th');
           th.textContent = header;
           headerRow.appendChild(th);
       });
@@ -383,15 +383,15 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
 
-      var tbody = document.createElement('tbody');
+      let tbody = document.createElement('tbody');
 
-      for (var month in jsonData) {
-          var row = document.createElement('tr');
-          var data = jsonData[month];
+      for (let month in jsonData) {
+          let row = document.createElement('tr');
+          let data = jsonData[month];
 
-          var cell1 = document.createElement('td');
-          var cell2 = document.createElement('td');
-          var cell3 = document.createElement('td');
+          let cell1 = document.createElement('td');
+          let cell2 = document.createElement('td');
+          let cell3 = document.createElement('td');
 
           cell1.textContent = month;
           cell2.textContent = data.totalOrders;
@@ -407,10 +407,10 @@
           tbody.appendChild(row);
       }
 
-      var finalRow = document.createElement('tr');
-      var cell1 = document.createElement('td');
-      var cell2 = document.createElement('td');
-      var cell3 = document.createElement('td');
+      let finalRow = document.createElement('tr');
+      let cell1 = document.createElement('td');
+      let cell2 = document.createElement('td');
+      let cell3 = document.createElement('td');
 
       cell1.innerHTML = "<strong>Totalt</strong>";
       cell2.innerHTML = `<strong>${finalOrders}</strong>`;
@@ -428,17 +428,17 @@
   }
 
   function generateStreaksTable(jsonData) {
-      var div = document.createElement('div');
+      let div = document.createElement('div');
 
-      var table1 = document.createElement('table');
+      let table1 = document.createElement('table');
       table1.className = "table table-condensed table-striped tech-specs-table";
 
-      var thead1 = document.createElement('thead');
-      var headerRow1 = document.createElement('tr');
-      var headers1 = ['Längsta streak', 'Nuvarande streak'];
+      let thead1 = document.createElement('thead');
+      let headerRow1 = document.createElement('tr');
+      let headers1 = ['Längsta streak', 'Nuvarande streak'];
 
       headers1.forEach(function(header) {
-          var th = document.createElement('th');
+          let th = document.createElement('th');
           th.textContent = header;
           headerRow1.appendChild(th);
       });
@@ -446,10 +446,10 @@
       thead1.appendChild(headerRow1);
       table1.appendChild(thead1);
 
-      var tbody1 = document.createElement('tbody');
-      var row1 = document.createElement('tr');
-      var cell1_1 = document.createElement('td');
-      var cell1_2 = document.createElement('td');
+      let tbody1 = document.createElement('tbody');
+      let row1 = document.createElement('tr');
+      let cell1_1 = document.createElement('td');
+      let cell1_2 = document.createElement('td');
 
       cell1_1.textContent = jsonData.longestStreak;
       cell1_2.textContent = jsonData.currentStreak;
@@ -462,15 +462,15 @@
 
       /* --- */
 
-      var table2 = document.createElement('table');
+      let table2 = document.createElement('table');
       table2.className = "table table-condensed table-striped tech-specs-table";
 
-      var thead2 = document.createElement('thead');
-      var headerRow2 = document.createElement('tr');
-      var headers2 = ['Streak började', 'Streak slutade', 'Antal månader'];
+      let thead2 = document.createElement('thead');
+      let headerRow2 = document.createElement('tr');
+      let headers2 = ['Streak började', 'Streak slutade', 'Antal månader'];
 
       headers2.forEach(function(header) {
-          var th = document.createElement('th');
+          let th = document.createElement('th');
           th.textContent = header;
           headerRow2.appendChild(th);
       });
@@ -478,13 +478,13 @@
       thead2.appendChild(headerRow2);
       table2.appendChild(thead2);
 
-      var tbody2 = document.createElement('tbody');
+      let tbody2 = document.createElement('tbody');
 
       jsonData.streaks.forEach(streak => {
-          var row2 = document.createElement('tr');
-          var cell2_1 = document.createElement('td');
-          var cell2_2 = document.createElement('td');
-          var cell2_3 = document.createElement('td');
+          let row2 = document.createElement('tr');
+          let cell2_1 = document.createElement('td');
+          let cell2_2 = document.createElement('td');
+          let cell2_3 = document.createElement('td');
 
           cell2_1.textContent = streak.start;
           cell2_2.textContent = streak.end;
@@ -506,15 +506,15 @@
   }
 
   function generateCategoriesTable(jsonData) {
-      var table = document.createElement('table');
+      let table = document.createElement('table');
       table.className = "table table-condensed table-striped tech-specs-table";
 
-      var thead = document.createElement('thead');
-      var headerRow = document.createElement('tr');
-      var headers = ['Kategori', 'Antal produkter'];
+      let thead = document.createElement('thead');
+      let headerRow = document.createElement('tr');
+      let headers = ['Kategori', 'Antal produkter'];
 
       headers.forEach(function(header) {
-          var th = document.createElement('th');
+          let th = document.createElement('th');
           th.textContent = header;
           headerRow.appendChild(th);
       });
@@ -522,14 +522,14 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
 
-      var tbody = document.createElement('tbody');
+      let tbody = document.createElement('tbody');
 
-      for (var category in jsonData) {
-          var row = document.createElement('tr');
-          var data = jsonData[category];
+      for (let category in jsonData) {
+          let row = document.createElement('tr');
+          let data = jsonData[category];
 
-          var cell1 = document.createElement('td');
-          var cell2 = document.createElement('td');
+          let cell1 = document.createElement('td');
+          let cell2 = document.createElement('td');
 
           cell1.textContent = category;
           cell2.textContent = data;
@@ -548,15 +548,15 @@
   }
 
   function generateHoarderTable(jsonData) {
-      var table = document.createElement('table');
+      let table = document.createElement('table');
       table.className = "table table-condensed table-striped tech-specs-table";
 
-      var thead = document.createElement('thead');
-      var headerRow = document.createElement('tr');
-      var headers = ['Produkt', 'Antal köpta'];
+      let thead = document.createElement('thead');
+      let headerRow = document.createElement('tr');
+      let headers = ['Produkt', 'Antal köpta'];
 
       headers.forEach(function(header) {
-          var th = document.createElement('th');
+          let th = document.createElement('th');
           th.textContent = header;
           headerRow.appendChild(th);
       });
@@ -564,14 +564,14 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
 
-      var tbody = document.createElement('tbody');
+      let tbody = document.createElement('tbody');
 
       jsonData.forEach(product => {
-          var row = document.createElement('tr');
-          var cell1 = document.createElement('td');
-          var cell2 = document.createElement('td');
+          let row = document.createElement('tr');
+          let cell1 = document.createElement('td');
+          let cell2 = document.createElement('td');
 
-          var link = document.createElement('a');
+          let link = document.createElement('a');
           link.href = "https://www.webhallen.com/" + product.id;
           link.appendChild(document.createTextNode("[" + product.id + "] " + product.name));
 
@@ -590,15 +590,15 @@
   }
 
   function generateExperienceTable(jsonData) {
-      var table = document.createElement('table');
+      let table = document.createElement('table');
       table.className = "table table-condensed table-striped tech-specs-table";
 
-      var thead = document.createElement('thead');
-      var headerRow = document.createElement('tr');
-      var headers = ['Köp XP', 'Bonus XP', 'Cheevo XP', 'Supply drop XP', 'Övriga XP', 'Totalt'];
+      let thead = document.createElement('thead');
+      let headerRow = document.createElement('tr');
+      let headers = ['Köp XP', 'Bonus XP', 'Cheevo XP', 'Supply drop XP', 'Övriga XP', 'Totalt'];
 
       headers.forEach(function(header) {
-          var th = document.createElement('th');
+          let th = document.createElement('th');
           th.textContent = header;
           headerRow.appendChild(th);
       });
@@ -606,15 +606,15 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
 
-      var tbody = document.createElement('tbody');
+      let tbody = document.createElement('tbody');
 
-      var row = document.createElement('tr');
-      var cell1 = document.createElement('td');
-      var cell2 = document.createElement('td');
-      var cell3 = document.createElement('td');
-      var cell4 = document.createElement('td');
-      var cell5 = document.createElement('td');
-      var cell6 = document.createElement('td');
+      let row = document.createElement('tr');
+      let cell1 = document.createElement('td');
+      let cell2 = document.createElement('td');
+      let cell3 = document.createElement('td');
+      let cell4 = document.createElement('td');
+      let cell5 = document.createElement('td');
+      let cell6 = document.createElement('td');
 
       cell1.textContent = jsonData.purchases;
       cell2.textContent = jsonData.bonusXP;
@@ -638,18 +638,18 @@
   }
 
   function addDataToDiv(headerText, domObject) {
-      var div = document.createElement('div');
+      let div = document.createElement('div');
       div.className = "order my-4";
 
-      var table = document.createElement('table');
+      let table = document.createElement('table');
       table.className = 'table table-condensed';
 
-      var tbody = document.createElement('tbody');
+      let tbody = document.createElement('tbody');
 
-      var tr = document.createElement('tr');
+      let tr = document.createElement('tr');
       tr.className = 'order-id-wrap';
 
-      var td = document.createElement('td');
+      let td = document.createElement('td');
       td.textContent = headerText;
 
       tr.appendChild(td);
@@ -658,14 +658,14 @@
       div.appendChild(table);
 
 
-      var div1 = document.createElement('div');
-      var div2 = document.createElement('div');
-      var orderProgression = document.createElement('div');
-      var innerContainer = document.createElement('div');
-      var orderStatusEvent = document.createElement('div');
-      var icon = document.createElement('div');
-      var header = document.createElement('h3');
-      var secondary = document.createElement('div');
+      let div1 = document.createElement('div');
+      let div2 = document.createElement('div');
+      let orderProgression = document.createElement('div');
+      let innerContainer = document.createElement('div');
+      let orderStatusEvent = document.createElement('div');
+      let icon = document.createElement('div');
+      let header = document.createElement('h3');
+      let secondary = document.createElement('div');
 
       div1.appendChild(div2);
       div2.appendChild(orderProgression);
@@ -701,16 +701,16 @@
 
   async function _clearAndAddStatistics(event) {
       event.preventDefault();
-      var clickedLink = event.target;
+      let clickedLink = event.target;
 
-      var allLinks = document.querySelectorAll('.router-link-exact-active.router-link-active');
+      let allLinks = document.querySelectorAll('.router-link-exact-active.router-link-active');
       allLinks.forEach(function(link) {
           link.classList.remove('router-link-exact-active', 'router-link-active');
       });
 
       clickedLink.classList.add('router-link-exact-active', 'router-link-active');
 
-      var content = `
+      let content = `
       <h2 class="level-one-heading mb-5">Min statistik</h2><hr>
       <div class="mb-5">Här hittar du statistik om din aktivitet på webhallen.</div>
       `
@@ -718,11 +718,11 @@
       let paths = ['/html/body/div[2]/div[2]/div[1]/div[3]/main/div/div[4]/div[1]/div/article/div[2]/section',
                    '/html/body/div[2]/div[2]/div[1]/div[3]/main/div/div[4]/div[1]/div/article/div[2]/div[2]',
                    '//*[@id="container"]'];
-      var injectPath = findInjectPath(paths);
+      let injectPath = findInjectPath(paths);
       injectPath.innerHTML = content;
 
-      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      var image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      let image = document.createElementNS("http://www.w3.org/2000/svg", "image");
       image.setAttribute("href", 'https://cdn.webhallen.com/img/loading_light.svg');
       svg.appendChild(image);
 
@@ -764,15 +764,15 @@
 
   function addLink() {
       clearInterval(timerId);
-      var ul = document.evaluate('/html/body/div[2]/div[2]/div[1]/div[3]/main/div/div[4]/div[1]/div/article/div[2]/div/nav/div[1]/div[1]/ul', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      let ul = document.evaluate('/html/body/div[2]/div[2]/div[1]/div[3]/main/div/div[4]/div[1]/div/article/div[2]/div/nav/div[1]/div[1]/ul', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
       if (ul) {
-          var li = document.createElement('li');
+          let li = document.createElement('li');
           li.className = 'tile';
-          var link = document.createElement('a');
+          let link = document.createElement('a');
           link.href = '#';
 
-          var image = document.createElement('img');
+          let image = document.createElement('img');
           image.src = '//cdn.webhallen.com/img/icons/member/topplistor.svg';
           image.className = 'member-icon';
           image.alt = 'Statistik';
@@ -794,5 +794,5 @@
       addLink();
   }
 
-  var timerId = setInterval(main, 1000);
+  let timerId = setInterval(main, 1000);
 })();
