@@ -689,7 +689,7 @@
   function findInjectPath(paths) {
       let dom = null;
       paths.forEach(path => {
-          const d = document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+          const d = document.querySelector(path);
           if (d) {
               dom = d;
               return;
@@ -715,9 +715,9 @@
       <div class="mb-5">Här hittar du statistik om din aktivitet på webhallen.</div>
       `
 
-      let paths = ['/html/body/div[2]/div[2]/div[1]/div[3]/main/div/div[4]/div[1]/div/article/div[2]/section',
-                   '/html/body/div[2]/div[2]/div[1]/div[3]/main/div/div[4]/div[1]/div/article/div[2]/div[2]',
-                   '//*[@id="container"]'];
+      let paths = ['section',
+                   'div.member-subpage',
+                   'div.container'];
       let injectPath = findInjectPath(paths);
       injectPath.innerHTML = content;
 
@@ -764,7 +764,7 @@
 
   function addLink() {
       clearInterval(timerId);
-      let ul = document.evaluate('/html/body/div[2]/div[2]/div[1]/div[3]/main/div/div[4]/div[1]/div/article/div[2]/div/nav/div[1]/div[1]/ul', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      let ul = document.querySelector('.member-nav .desktop-wrap .nav');
 
       if (ul) {
           let li = document.createElement('li');
