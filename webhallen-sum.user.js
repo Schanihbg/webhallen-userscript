@@ -284,6 +284,74 @@
       return filteredArray.slice(0, count);
   }
 
+  function addSortingFunctionality(table, headers) {
+    var thead = table.querySelector("thead");
+    var headerRow = thead.querySelector("tr");
+
+    headerRow.childNodes.forEach(function (header, index) {
+      header.addEventListener("click", function () {
+        sortTable(table, index, headers);
+      });
+    });
+
+    function sortTable(table, columnIndex, headers) {
+      var rows,
+        switching,
+        i,
+        x,
+        y,
+        shouldSwitch,
+        dir,
+        switchcount = 0;
+      switching = true;
+      dir = "asc"; // Default sorting direction
+
+      while (switching) {
+        switching = false;
+        rows = table.querySelector("tbody").rows;
+
+        for (i = 0; i < rows.length - 1; i++) {
+          shouldSwitch = false;
+          x = rows[i].getElementsByTagName("td")[columnIndex];
+          y = rows[i + 1].getElementsByTagName("td")[columnIndex];
+
+          var xContent = x.textContent.toLowerCase();
+          var yContent = y.textContent.toLowerCase();
+
+          // Check if sorting is for string or number
+          if (columnIndex === 0) {
+            shouldSwitch =
+              dir === "asc" ? xContent > yContent : xContent < yContent;
+          } else if (columnIndex === 1) {
+            shouldSwitch =
+              dir === "asc"
+                ? parseInt(xContent) > parseInt(yContent)
+                : parseInt(xContent) < parseInt(yContent);
+          }
+
+          if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            switchcount++;
+          }
+        }
+
+        // Toggle the sorting direction if a switch occurred
+        if (switchcount === 0 && dir === "asc") {
+          dir = "desc";
+          switching = true;
+        }
+      }
+
+      // Update header text with arrow indicator
+      var arrow = dir === "asc" ? "▲" : "▼";
+      headerRow.childNodes.forEach(function (header, index) {
+        var arrowIndicator = index === columnIndex ? arrow : "";
+        header.textContent = headers[index] + arrowIndicator;
+      });
+    }
+  }
+
   function generateMonthsTable(jsonData) {
       var table = document.createElement('table');
       table.className = "table table-condensed table-striped tech-specs-table";
@@ -441,6 +509,8 @@
       }
 
       table.appendChild(tbody);
+
+      addSortingFunctionality(table, headers);
 
       return table;
   }
