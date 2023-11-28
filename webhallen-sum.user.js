@@ -359,6 +359,8 @@
       var thead = document.createElement('thead');
       var headerRow = document.createElement('tr');
       var headers = ['År Månad', 'Totalt antal ordrar', 'Total summa'];
+      var finalSum = 0;
+      var finalOrders = 0;
 
       headers.forEach(function(header) {
           var th = document.createElement('th');
@@ -383,12 +385,30 @@
           cell2.textContent = data.totalOrders;
           cell3.textContent = data.totalSum;
 
+          finalOrders += data.totalOrders;
+          finalSum += data.totalSum;
+
           row.appendChild(cell1);
           row.appendChild(cell2);
           row.appendChild(cell3);
 
           tbody.appendChild(row);
       }
+
+      var finalRow = document.createElement('tr');
+      var cell1 = document.createElement('td');
+      var cell2 = document.createElement('td');
+      var cell3 = document.createElement('td');
+
+      cell1.innerHTML = "<strong>Totalt</strong>";
+      cell2.innerHTML = `<strong>${finalOrders}</strong>`;
+      cell3.innerHTML = `<strong>${finalSum}</strong>`;
+
+      finalRow.appendChild(cell1);
+      finalRow.appendChild(cell2);
+      finalRow.appendChild(cell3);
+
+      tbody.appendChild(finalRow);
 
       table.appendChild(tbody);
 
