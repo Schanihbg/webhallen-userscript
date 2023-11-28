@@ -266,12 +266,12 @@
   }
 
   function findTopHoarderCheevoStats(orders, count = 10) {
-      let itemCount = {}
+      let itemCount = {};
       orders.forEach(order => { order.rows.forEach(item => {
           const id = item.product.id;
 
           if (!itemCount[id]) {
-              itemCount[id] = { name: item.product.name, bought: 1 };
+              itemCount[id] = { id: id, name: item.product.name, bought: 1 };
           } else {
               itemCount[id].bought += item.quantity;
           }
@@ -539,7 +539,11 @@
           var cell1 = document.createElement('td');
           var cell2 = document.createElement('td');
 
-          cell1.textContent = product.name;
+          var link = document.createElement('a');
+          link.href = "https://www.webhallen.com/" + product.id;
+          link.appendChild(document.createTextNode("[" + product.id + "] " + product.name));
+
+          cell1.appendChild(link);
           cell2.textContent = product.bought;
 
           row.appendChild(cell1);
