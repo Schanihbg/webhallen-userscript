@@ -164,7 +164,7 @@
       });
 
       let unsortedCategories = {};
-      filteredOrders.forEach(order => order.rows.forEach(item => unsortedCategories[item.product.categoryTree] = (unsortedCategories[item.product.categoryTree] || 0) + 1));
+      filteredOrders.forEach(order => {order.rows.forEach(item => { unsortedCategories[item.product.categoryTree] = (unsortedCategories[item.product.categoryTree] || 0) + 1})});
 
       const sortedKeys = Object.keys(unsortedCategories).sort();
       const sortedCategories = {};
@@ -275,8 +275,7 @@
           } else {
               itemCount[id].bought += item.quantity;
           }
-      }
-                                                  )});
+      })});
 
       const dataArray = Object.values(itemCount);
       const filteredArray = dataArray.filter(product => product.bought > 1);
