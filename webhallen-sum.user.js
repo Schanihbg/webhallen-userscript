@@ -164,7 +164,14 @@
       });
 
       let unsortedCategories = {};
-      filteredOrders.forEach(order => {order.rows.forEach(item => { unsortedCategories[item.product.categoryTree] = (unsortedCategories[item.product.categoryTree] || 0) + 1})});
+      filteredOrders.forEach(order => {order.rows.forEach(item => {
+        const categories = item.product.categoryTree.split('/');
+        const topLevel = categories[0];
+        const subcategory = categories.length > 1 ? categories[1] : null;
+        const categoryString = topLevel + (subcategory !== null ? '/' + subcategory : '');
+        
+        unsortedCategories[categoryString] = (unsortedCategories[categoryString] || 0) + 1
+      })});
 
       const sortedKeys = Object.keys(unsortedCategories).sort();
       const sortedCategories = {};
