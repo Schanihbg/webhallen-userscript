@@ -339,6 +339,11 @@
               dir === "asc"
                 ? parseInt(xContent) > parseInt(yContent)
                 : parseInt(xContent) < parseInt(yContent);
+          } else if (columnIndex === 2) {
+            shouldSwitch =
+              dir === "asc"
+                ? parseInt(xContent) > parseInt(yContent)
+                : parseInt(xContent) < parseInt(yContent);
           }
 
           if (shouldSwitch) {
@@ -407,6 +412,7 @@
           tbody.appendChild(row);
       }
 
+      let footer = document.createElement('tfoot');
       let finalRow = document.createElement('tr');
       let cell1 = document.createElement('td');
       let cell2 = document.createElement('td');
@@ -419,10 +425,12 @@
       finalRow.appendChild(cell1);
       finalRow.appendChild(cell2);
       finalRow.appendChild(cell3);
-
-      tbody.appendChild(finalRow);
+      footer.appendChild(finalRow);
 
       table.appendChild(tbody);
+      table.appendChild(footer);
+
+      addSortingFunctionality(table, headers);
 
       return table;
   }
