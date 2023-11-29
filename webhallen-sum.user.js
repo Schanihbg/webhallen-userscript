@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Webhallen user stats
 // @namespace    Webhallen
-// @version      0.5
+// @version      0.6
 // @description  Generate a statistics button and present a wide variety of stats from the users account. Note: This is a proof of concept and could be highly unstable, use at your own risk!
 // @author       Schanii, tsjost, and Furiiku
 // @match        https://www.webhallen.com/se/member/*
@@ -72,29 +72,6 @@
   async function fetchSupplyDrops() {
       const data = await fetchAPI(`https://www.webhallen.com/api/supply-drop/`);
       return data;
-  }
-
-  function isLastDayOfMonth(date) {
-      const clonedDate = new Date(date);
-      clonedDate.setMonth(clonedDate.getMonth() + 1);
-      clonedDate.setDate(0);
-      return date.getDate() === clonedDate.getDate();
-  }
-
-  function isNextCalendarMonth(date1, date2) {
-      const year1 = date1.getFullYear();
-      const year2 = date2.getFullYear();
-      if (year1 !== year2) {
-          return false;
-      }
-
-      const month1 = date1.getMonth();
-      const month2 = date2.getMonth();
-      if ((month1 + 1) % 12 === month2) {
-          return true;
-      }
-
-      return false;
   }
 
   function getOrderDatesPerMonthWithSumKillstreak(orders) {
