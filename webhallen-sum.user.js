@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Webhallen user stats
 // @namespace    Webhallen
-// @version      0.5
+// @version      0.6
 // @description  Generate a statistics button and present a wide variety of stats from the users account. Note: This is a proof of concept and could be highly unstable, use at your own risk!
 // @author       Schanii, tsjost, and Furiiku
 // @match        https://www.webhallen.com/se/member/*
@@ -71,33 +71,10 @@
         return data;
     }
 
-    async function fetchSupplyDrops() {
-        const data = await fetchAPI(`https://www.webhallen.com/api/supply-drop/`);
-        return data;
-    }
-
-    function isLastDayOfMonth(date) {
-        const clonedDate = new Date(date);
-        clonedDate.setMonth(clonedDate.getMonth() + 1);
-        clonedDate.setDate(0);
-        return date.getDate() === clonedDate.getDate();
-    }
-
-    function isNextCalendarMonth(date1, date2) {
-        const year1 = date1.getFullYear();
-        const year2 = date2.getFullYear();
-        if (year1 !== year2) {
-            return false;
-        }
-
-        const month1 = date1.getMonth();
-        const month2 = date2.getMonth();
-        if ((month1 + 1) % 12 === month2) {
-            return true;
-        }
-
-        return false;
-    }
+  async function fetchSupplyDrops() {
+      const data = await fetchAPI(`https://www.webhallen.com/api/supply-drop/`);
+      return data;
+  }
 
     function getOrderDatesPerMonthWithSumKillstreak(orders) {
         const groupedData = Object.entries(orders.reduce((acc, { orderDate, sentDate, totalSum }) => {
@@ -109,22 +86,21 @@
             const sentYear = dateSent.getUTCFullYear();
             const sentMonth = dateSent.getUTCMonth();
 
-
+          const sentKey = new Date(Date.UTC(sentYear, sentMonth)).getTime() / 1000;
+          if (!acc[sentKey]) {
+              acc[sentKey] = { totalSum: totalSum };
+          } else {
+              acc[sentKey].totalSum += totalSum;
+          }
+          
+          if ( sentYear != orderedYear || sentMonth != orderedMonth ) {
             const orderKey = new Date(Date.UTC(orderedYear, orderedMonth)).getTime() / 1000;
             if (!acc[orderKey]) {
                 acc[orderKey] = { totalSum: totalSum };
             } else {
                 acc[orderKey].totalSum += totalSum;
             }
-
-            if (isLastDayOfMonth(dateOrdered) && isNextCalendarMonth(dateOrdered, dateSent) ) {
-                const sentKey = new Date(Date.UTC(sentYear, sentMonth)).getTime() / 1000;
-                if (!acc[sentKey]) {
-                    acc[sentKey] = { totalSum: totalSum };
-                } else {
-                    acc[sentKey].totalSum += totalSum;
-                }
-            }
+          }
 
             return acc;
         }, {})).map(([key, { totalSum }]) => ({
