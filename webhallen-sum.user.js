@@ -107,21 +107,20 @@
           const sentYear = dateSent.getUTCFullYear();
           const sentMonth = dateSent.getUTCMonth();
 
-
-          const orderKey = new Date(Date.UTC(orderedYear, orderedMonth)).getTime() / 1000;
-          if (!acc[orderKey]) {
-              acc[orderKey] = { totalSum: totalSum };
+          const sentKey = new Date(Date.UTC(sentYear, sentMonth)).getTime() / 1000;
+          if (!acc[sentKey]) {
+              acc[sentKey] = { totalSum: totalSum };
           } else {
-              acc[orderKey].totalSum += totalSum;
+              acc[sentKey].totalSum += totalSum;
           }
-
-          if (isLastDayOfMonth(dateOrdered) && isNextCalendarMonth(dateOrdered, dateSent) ) {
-              const sentKey = new Date(Date.UTC(sentYear, sentMonth)).getTime() / 1000;
-              if (!acc[sentKey]) {
-                  acc[sentKey] = { totalSum: totalSum };
-              } else {
-                  acc[sentKey].totalSum += totalSum;
-              }
+          
+          if ( sentYear != orderedYear || sentMonth != orderedMonth ) {
+            const orderKey = new Date(Date.UTC(orderedYear, orderedMonth)).getTime() / 1000;
+            if (!acc[orderKey]) {
+                acc[orderKey] = { totalSum: totalSum };
+            } else {
+                acc[orderKey].totalSum += totalSum;
+            }
           }
 
           return acc;
