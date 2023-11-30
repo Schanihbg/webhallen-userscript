@@ -14,16 +14,24 @@
 (function() {
     'use strict';
 
-    const URI = 'https://www.webhallen.com';
-    const URI_CDN = 'https://cdn.webhallen.com';
-    const API = '/api';
+    const URI_CDN = '//cdn.webhallen.com';
 
     async function fetchProductData(articleId) {
+        let resp;
         try {
-            const response = await fetch(`${URI}${API}/product/${articleId}`);
-            const data = await response.json();
-            const product = data.product;
+            const url = new URL(`/api/product/${articleId}`, "https://www.webhallen.com");
+            await fetch(url)
+                .then((response) => {
+                return response.json();
+            })
+                .then((data) => {
+                resp = data;
+            })
+                .catch((err) => {
+                console.warn("Something went wrong.", err);
+            });
 
+            const product = resp.product;
             if (!product || !product.data) {
                 console.error(`Article ${articleId} does not contain any data to compare against.`);
                 return null;
