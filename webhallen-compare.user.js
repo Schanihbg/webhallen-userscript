@@ -168,25 +168,20 @@
     async function sendSelectedProducts(ids) {
         const div = await generateTable(ids);
         const overlay = createOverlay(div);
-        document.body.appendChild(overlay);
+        document.getElementById('site-container').appendChild(overlay);
     }
 
     function createOverlay(content) {
         console.log(content);
-        const overlay = document.createElement('div');
-        overlay.className = 'overlay';
+        const root = document.createElement('div');
+        root.className = 'modal-root';
+        
+        const container = document.createElement('div');
+        container.className = 'modal-container';
 
-        overlay.style.position = 'fixed';
-        overlay.style.top = '10%';
-        overlay.style.left = '10%';
-        overlay.style.width = '80%';
-        overlay.style.height = '85vh';
+        const overlay = document.createElement('div');
+        overlay.className = 'width: 85vw; height: 85vh; line-height: 1;';
         overlay.style.overflow = 'auto';
-        overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-        overlay.style.border = '2px solid #000';
-        overlay.style.borderRadius = '10px';
-        overlay.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)';
-        overlay.style.zIndex = '9999';
 
         const closeImage = document.createElement('img');
         closeImage.className = "icon";
@@ -196,13 +191,16 @@
         const closeButton = document.createElement('button');
         closeButton.className = "btn-close";
         closeButton.addEventListener('click', () => {
-            overlay.remove();
+            root.remove();
         });
         closeButton.appendChild(closeImage);
 
-        content.querySelector('th:nth-of-type(3)').appendChild(closeButton);
+        
         overlay.appendChild(content);
-        return overlay;
+        container.appendChild(overlay);
+        container.appendChild(closeButton);
+        root.appendChild(container);
+        return root;
     }
 
     function handleProductSelection() {
