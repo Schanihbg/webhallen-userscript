@@ -5,6 +5,7 @@
 // @description  Generates a checkbox on all products and when the user clicks two it will present an overlay with a table comparing the products.
 // @author       Furiiku
 // @match        https://www.webhallen.com/se/category/*
+// @match        https://www.webhallen.com/se/search*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=webhallen.com
 // @grant        none
 // ==/UserScript==
