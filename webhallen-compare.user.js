@@ -172,7 +172,6 @@
     }
 
     function createOverlay(content) {
-        console.log(content);
         const root = document.createElement('div');
         root.className = 'modal-root';
         
@@ -210,8 +209,9 @@
             const productIds = Array.from(selectedProducts).map(product => product.dataset.productId);
             sendSelectedProducts(productIds);
 
-            selectedProducts.forEach(product => {
-                product.checked = false;
+            selectedProducts.forEach(checkbox => {
+                const label = checkbox.parentNode;
+                label.dispatchEvent(new Event('click'));
             });
         }
     }
@@ -219,6 +219,12 @@
     function createCheckbox(product) {
         const link = product.querySelector('a');
         const id = link.href.split('/').slice(-1).toString().slice(0, 6);
+        if (!id) return null;
+
+        const label = document.createElement('label');
+        label.className = "checkbox-wrap _small";
+        label.style.left = "40px";
+        label.style.position = "relative";
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -226,7 +232,44 @@
         checkbox.dataset.productId = id;
         checkbox.addEventListener('change', handleProductSelection);
 
-        return checkbox;
+        const spanCheckbox = document.createElement('span');
+        spanCheckbox.className = "checkbox";
+        spanCheckbox.innerHTML = "<!---->";
+
+        const spanCheckboxLabel = document.createElement('span');
+        spanCheckboxLabel.className = "checkbox-label";
+        spanCheckboxLabel.textContent = "Compare";
+
+        label.addEventListener('click', function (event) {
+            event.preventDefault();
+            label.classList.toggle('_checked');
+
+            const checkboxInput = label.querySelector('input[type="checkbox"]');
+            checkboxInput.checked = !checkboxInput.checked;
+            checkboxInput.dispatchEvent(new Event('change'));
+        
+            const  checkboxSpan = label.getElementsByClassName('checkbox')[0];
+            checkboxSpan.classList.toggle('checked');
+        
+            if (checkboxSpan.classList.contains('checked')) {
+                const checkmarkSpan = document.createElement('span');
+                checkmarkSpan.className = 'checkmark';
+                spanCheckbox.appendChild(checkmarkSpan);
+            } else {
+                while (checkboxSpan.firstChild) {
+                    checkboxSpan.removeChild(checkboxSpan.firstChild);
+                }
+        
+                const commentNode = document.createComment('');
+                checkboxSpan.appendChild(commentNode);
+            }
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(spanCheckbox);
+        label.appendChild(spanCheckboxLabel);
+
+        return label;
     }
 
     function injectCSS() {
@@ -273,7 +316,7 @@
                             if (product) {
                                 console.log(`Found product ${product}`);
                                 const checkbox = createCheckbox(product);
-                                product.insertBefore(checkbox, product.firstChild);
+                                product.appendChild(checkbox, product.firstChild);
                             }
                         }
                     });
