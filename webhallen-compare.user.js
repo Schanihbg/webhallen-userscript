@@ -1,3 +1,6 @@
+/* eslint-disable func-names */
+/* eslint-disable no-console */
+/* eslint-disable strict */
 // ==UserScript==
 // @name         Webhallen compare products
 // @namespace    Webhallen
@@ -12,7 +15,7 @@
 
 // NOTE: Can be very unstable and has not been tested on anything but latest firefox.
 
-(function() {
+(function () {
     'use strict';
 
     const URI_CDN = '//cdn.webhallen.com';
@@ -20,19 +23,17 @@
     async function fetchProductData(articleId) {
         let resp;
         try {
-            const url = new URL(`/api/product/${articleId}`, "https://www.webhallen.com");
+            const url = new URL(`/api/product/${articleId}`, 'https://www.webhallen.com');
             await fetch(url)
-                .then((response) => {
-                return response.json();
-            })
+                .then((response) => response.json())
                 .then((data) => {
-                resp = data;
-            })
+                    resp = data;
+                })
                 .catch((err) => {
-                console.warn("Something went wrong.", err);
-            });
+                    console.warn('Something went wrong.', err);
+                });
 
-            const product = resp.product;
+            const { product } = resp;
             if (!product || !product.data) {
                 console.error(`Article ${articleId} does not contain any data to compare against.`);
                 return null;
@@ -45,11 +46,13 @@
                 data: {},
             };
 
+            // eslint-disable-next-line no-restricted-syntax, guard-for-in
             for (const header in product.data) {
                 if (!filteredProduct.data[header]) {
                     filteredProduct.data[header] = {};
                 }
 
+                // eslint-disable-next-line no-restricted-syntax, guard-for-in
                 for (const attribute in product.data[header]) {
                     filteredProduct.data[header][attribute] = product.data[header][attribute].value;
                 }
@@ -60,43 +63,6 @@
             console.error(`Error occurred: ${error}`);
             return null;
         }
-    }
-
-    function generateComparisonTable(products) {
-        const headers = Array.from(
-            new Set(products.flatMap((product) => Object.keys(product.data)))
-        );
-
-        let outputHtml = `
-            <tr>
-                <th class="attribute"></th>
-                <th>
-                    <img src='${URI_CDN}${products[0].thumbnail}' alt='${products[0].name}'>
-                    <p>${products[0].name} (${products[0].id})</p>
-                </th>
-                <th>
-                    <img src='${URI_CDN}${products[1].thumbnail}' alt='${products[1].name}'>
-                    <p>${products[1].name} (${products[1].id})</p>
-                </th>
-            </tr>
-        `;
-
-        for (const header of headers) {
-            const attributes = Array.from(
-                new Set(products.flatMap((product) => Object.keys(product.data[header] || {})))
-            );
-            outputHtml += generateTableRowHeader(header);
-
-            for (const attribute of attributes) {
-                outputHtml += generateTableRow(
-                    attribute,
-                    products[0].data[header]?.[attribute] || '',
-                    products[1].data[header]?.[attribute] || ''
-                );
-            }
-        }
-
-        return outputHtml;
     }
 
     function generateTableRow(attribute, value1, value2) {
@@ -133,6 +99,43 @@
         `;
     }
 
+    function generateComparisonTable(products) {
+        const headers = Array.from(
+            new Set(products.flatMap((product) => Object.keys(product.data))),
+        );
+
+        let outputHtml = `
+            <tr>
+                <th class="attribute"></th>
+                <th>
+                    <img src='${URI_CDN}${products[0].thumbnail}' alt='${products[0].name}'>
+                    <p>${products[0].name} (${products[0].id})</p>
+                </th>
+                <th>
+                    <img src='${URI_CDN}${products[1].thumbnail}' alt='${products[1].name}'>
+                    <p>${products[1].name} (${products[1].id})</p>
+                </th>
+            </tr>
+        `;
+
+        headers.forEach((header) => {
+            const attributes = Array.from(
+                new Set(products.flatMap((product) => Object.keys(product.data[header] || {}))),
+            );
+            outputHtml += generateTableRowHeader(header);
+
+            attributes.forEach((attribute) => {
+                outputHtml += generateTableRow(
+                    attribute,
+                    products[0].data[header]?.[attribute] || '',
+                    products[1].data[header]?.[attribute] || '',
+                );
+            });
+        });
+
+        return outputHtml;
+    }
+
     async function generateTable(articles) {
         if (typeof articles[0] === 'undefined' || typeof articles[1] === 'undefined') return;
 
@@ -161,20 +164,14 @@
         table.appendChild(tbody);
         htmlOutputContainer.appendChild(panelHeading);
         htmlOutputContainer.appendChild(table);
-        
-        return htmlOutputContainer;
-    }
 
-    async function sendSelectedProducts(ids) {
-        const div = await generateTable(ids);
-        const overlay = createOverlay(div);
-        document.getElementById('site-container').appendChild(overlay);
+        return htmlOutputContainer;
     }
 
     function createOverlay(content) {
         const root = document.createElement('div');
         root.className = 'modal-root';
-        
+
         const container = document.createElement('div');
         container.className = 'modal-container';
 
@@ -183,18 +180,17 @@
         overlay.style.overflow = 'auto';
 
         const closeImage = document.createElement('img');
-        closeImage.className = "icon";
-        closeImage.src = "//cdn.webhallen.com/api/dynimg/icon/esc/FFFFFF";
-        closeImage.alt = "Stäng ner";
+        closeImage.className = 'icon';
+        closeImage.src = '//cdn.webhallen.com/api/dynimg/icon/esc/FFFFFF';
+        closeImage.alt = 'Stäng ner';
 
         const closeButton = document.createElement('button');
-        closeButton.className = "btn-close";
+        closeButton.className = 'btn-close';
         closeButton.addEventListener('click', () => {
             root.remove();
         });
         closeButton.appendChild(closeImage);
 
-        
         overlay.appendChild(content);
         container.appendChild(overlay);
         container.appendChild(closeButton);
@@ -202,14 +198,22 @@
         return root;
     }
 
+    async function sendSelectedProducts(ids) {
+        const div = await generateTable(ids);
+        const overlay = createOverlay(div);
+        document.getElementById('site-container').appendChild(overlay);
+    }
+
     function handleProductSelection() {
         const selectedProducts = document.querySelectorAll('.product-checkbox:checked');
 
         if (selectedProducts.length === 2) {
-            const productIds = Array.from(selectedProducts).map(product => product.dataset.productId);
+            const productIds = Array.from(selectedProducts).map(
+                (product) => product.dataset.productId,
+            );
             sendSelectedProducts(productIds);
 
-            selectedProducts.forEach(checkbox => {
+            selectedProducts.forEach((checkbox) => {
                 const label = checkbox.parentNode;
                 label.dispatchEvent(new Event('click'));
             });
@@ -222,9 +226,9 @@
         if (!id) return null;
 
         const label = document.createElement('label');
-        label.className = "checkbox-wrap _small";
-        label.style.left = "40px";
-        label.style.position = "relative";
+        label.className = 'checkbox-wrap _small';
+        label.style.left = '40px';
+        label.style.position = 'relative';
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -233,24 +237,24 @@
         checkbox.addEventListener('change', handleProductSelection);
 
         const spanCheckbox = document.createElement('span');
-        spanCheckbox.className = "checkbox";
-        spanCheckbox.innerHTML = "<!---->";
+        spanCheckbox.className = 'checkbox';
+        spanCheckbox.innerHTML = '<!---->';
 
         const spanCheckboxLabel = document.createElement('span');
-        spanCheckboxLabel.className = "checkbox-label";
-        spanCheckboxLabel.textContent = "Compare";
+        spanCheckboxLabel.className = 'checkbox-label';
+        spanCheckboxLabel.textContent = 'Compare';
 
-        label.addEventListener('click', function (event) {
+        label.addEventListener('click', (event) => {
             event.preventDefault();
             label.classList.toggle('_checked');
 
             const checkboxInput = label.querySelector('input[type="checkbox"]');
             checkboxInput.checked = !checkboxInput.checked;
             checkboxInput.dispatchEvent(new Event('change'));
-        
-            const  checkboxSpan = label.getElementsByClassName('checkbox')[0];
+
+            const checkboxSpan = label.getElementsByClassName('checkbox')[0];
             checkboxSpan.classList.toggle('checked');
-        
+
             if (checkboxSpan.classList.contains('checked')) {
                 const checkmarkSpan = document.createElement('span');
                 checkmarkSpan.className = 'checkmark';
@@ -259,7 +263,7 @@
                 while (checkboxSpan.firstChild) {
                     checkboxSpan.removeChild(checkboxSpan.firstChild);
                 }
-        
+
                 const commentNode = document.createComment('');
                 checkboxSpan.appendChild(commentNode);
             }
@@ -307,21 +311,20 @@
 
         const config = { childList: true, subtree: true };
 
-        const callback = function(mutationsList, observer) {
-            for (const mutation of mutationsList) {
+        const callback = function (mutationsList, observer) {
+            mutationsList.forEach((mutation) => {
                 if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(addedNode => {
+                    mutation.addedNodes.forEach((addedNode) => {
                         if (addedNode.className && addedNode.className === 'panel-thin product-grid-item col-md-4 col-sm-6 col-xs-6 panel') {
-                        const product = addedNode.querySelector('.panel-top');
+                            const product = addedNode.querySelector('.panel-top');
                             if (product) {
-                                console.log(`Found product ${product}`);
                                 const checkbox = createCheckbox(product);
                                 product.appendChild(checkbox, product.firstChild);
                             }
                         }
                     });
                 }
-            }
+            });
         };
 
         const observer = new MutationObserver(callback);
@@ -330,4 +333,4 @@
 
     injectCSS();
     observeDOM();
-})();
+}());

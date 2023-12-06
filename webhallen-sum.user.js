@@ -1,3 +1,7 @@
+/* eslint-disable strict */
+/* eslint-disable max-len */
+/* eslint-disable func-names */
+/* eslint-disable no-console */
 // ==UserScript==
 // @name         Webhallen user stats
 // @namespace    Webhallen
@@ -9,788 +13,820 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
-  'use strict';
+(function () {
+    'use strict';
 
-  let ME = null;
-  let MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+    let ME = null;
+    const MONTH_NAMES = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Maj',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Dec',
+    ];
 
-  async function fetchAPI(uri, params = null) {
-      let resp;
-      const url = new URL(uri);
-      if (params) {
-          Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
-      }
+    async function fetchAPI(uri, params = null) {
+        let resp;
+        const url = new URL(uri);
+        if (params) {
+            Object.keys(params).forEach((key) => url.searchParams.append(key, params[key]));
+        }
 
-      await fetch(url.toString())
-          .then((response) => {
-          // The API call was successful!
-          return response.json();
-      })
-          .then((data) => {
-          // This is the JSON from our response
-          resp = data;
-      })
-          .catch((err) => {
-          // There was an error
-          console.warn("Something went wrong.", err);
-      });
-      console.log("callURL resp", resp);
-      return resp;
-  }
+        await fetch(url.toString())
+            .then((response) => response.json())
+            .then((data) => {
+                resp = data;
+            })
+            .catch((err) => {
+                console.warn('Something went wrong.', err);
+            });
+        console.log('callURL resp', resp);
+        return resp;
+    }
 
-  function filterJson(jsonObject, keysToInclude) {
-    return Object.keys(jsonObject).reduce((acc, key) => (keysToInclude.includes(key) && (acc[key] = jsonObject[key]), acc), {});
-  }
+    function filterJson(jsonObject, keysToInclude) {
+        const filtered = Object.keys(jsonObject).reduce((acc, key) => {
+            if (keysToInclude.includes(key)) {
+                acc[key] = jsonObject[key];
+            }
+            return acc;
+        }, {});
+        return filtered;
+    }
 
-  async function fetchMe() {
-      const data = await fetchAPI('https://www.webhallen.com/api/me');
-      const filteredData = filterJson(data.user, ['id', 'experiencePoints']);
-      return filteredData;
-  }
+    async function fetchMe() {
+        const data = await fetchAPI('https://www.webhallen.com/api/me');
+        const filteredData = filterJson(data.user, ['id', 'experiencePoints']);
+        return filteredData;
+    }
 
-  async function fetchOrders(whId) {
-      let page = 1;
-      let orders = [];
+    async function fetchOrders(whId) {
+        let page = 1;
+        const orders = [];
 
-      while (true) {
-          const params = { page: page };
-          const data = await fetchAPI(`https://www.webhallen.com/api/order/user/${encodeURIComponent(whId)}?filters[history]=true&sort=orderStatus`, params);
-          if (data.orders.length === 0) break;
-          orders.push(...data.orders.map(order => order));
-          page++;
-      }
+        for (;;) {
+            const params = { page };
+            // eslint-disable-next-line no-await-in-loop
+            const data = await fetchAPI(`https://www.webhallen.com/api/order/user/${encodeURIComponent(whId)}?filters[history]=true&sort=orderStatus`, params);
+            if (data.orders.length === 0) break;
+            orders.push(...data.orders.map((order) => order));
+            page += 1;
+        }
 
-      return orders;
-  }
+        return orders;
+    }
 
-  async function fetchAchievements(whId) {
-      const data = await fetchAPI(`https://www.webhallen.com/api/user/${encodeURIComponent(whId)}/achievements`);
-      return data;
-  }
+    async function fetchAchievements(whId) {
+        const data = await fetchAPI(`https://www.webhallen.com/api/user/${encodeURIComponent(whId)}/achievements`);
+        return data;
+    }
 
-  async function fetchSupplyDrops() {
-      const data = await fetchAPI(`https://www.webhallen.com/api/supply-drop/`);
-      return data;
-  }
+    async function fetchSupplyDrops() {
+        const data = await fetchAPI('https://www.webhallen.com/api/supply-drop/');
+        return data;
+    }
 
-  function getOrderDatesPerMonthWithSumKillstreak(orders) {
-      const groupedData = Object.entries(orders.reduce((acc, { orderDate, sentDate, totalSum }) => {
-          const dateOrdered = new Date(orderDate * 1000);
-          const orderedYear = dateOrdered.getUTCFullYear();
-          const orderedMonth = dateOrdered.getUTCMonth();
+    function getOrderDatesPerMonthWithSumKillstreak(orders) {
+        const groupedData = Object.entries(orders.reduce((acc, { orderDate, sentDate, totalSum }) => {
+            const dateOrdered = new Date(orderDate * 1000);
+            const orderedYear = dateOrdered.getUTCFullYear();
+            const orderedMonth = dateOrdered.getUTCMonth();
 
-          const dateSent = new Date(sentDate * 1000);
-          const sentYear = dateSent.getUTCFullYear();
-          const sentMonth = dateSent.getUTCMonth();
+            const dateSent = new Date(sentDate * 1000);
+            const sentYear = dateSent.getUTCFullYear();
+            const sentMonth = dateSent.getUTCMonth();
 
-          const sentKey = new Date(Date.UTC(sentYear, sentMonth)).getTime() / 1000;
-          if (!acc[sentKey]) {
-              acc[sentKey] = { totalSum: totalSum };
-          } else {
-              acc[sentKey].totalSum += totalSum;
-          }
-          
-          if ( sentYear != orderedYear || sentMonth != orderedMonth ) {
+            const sentKey = new Date(Date.UTC(sentYear, sentMonth)).getTime() / 1000;
+            if (!acc[sentKey]) {
+                acc[sentKey] = { totalSum };
+            } else {
+                acc[sentKey].totalSum += totalSum;
+            }
+
+            if (sentYear !== orderedYear || sentMonth !== orderedMonth) {
+                const orderKey = new Date(Date.UTC(orderedYear, orderedMonth)).getTime() / 1000;
+                if (!acc[orderKey]) {
+                    acc[orderKey] = { totalSum };
+                } else {
+                    acc[orderKey].totalSum += totalSum;
+                }
+            }
+
+            return acc;
+        }, {})).map(([key, { totalSum }]) => ({
+            sentDate: parseInt(key, 10),
+            totalSum,
+        }));
+
+        const sortedGroupedData = groupedData.sort((a, b) => a.sentDate - b.sentDate);
+        return sortedGroupedData;
+    }
+
+    function getOrderDatesPerMonthWithSum(orders) {
+        const groupedData = Object.entries(orders.reduce((acc, { orderDate, totalSum }) => {
+            const dateOrdered = new Date(orderDate * 1000);
+            const orderedYear = dateOrdered.getUTCFullYear();
+            const orderedMonth = dateOrdered.getUTCMonth();
+
             const orderKey = new Date(Date.UTC(orderedYear, orderedMonth)).getTime() / 1000;
             if (!acc[orderKey]) {
-                acc[orderKey] = { totalSum: totalSum };
+                acc[orderKey] = { totalOrders: 1, totalSum };
             } else {
+                acc[orderKey].totalOrders += 1;
                 acc[orderKey].totalSum += totalSum;
             }
-          }
 
-          return acc;
-      }, {})).map(([key, { totalSum }]) => ({
-          sentDate: parseInt(key, 10),
-          totalSum,
-      }));
+            return acc;
+        }, {})).map(([key, { totalOrders, totalSum }]) => ({
+            orderDate: parseInt(key, 10),
+            totalOrders,
+            totalSum,
+        }));
 
-      const sortedGroupedData = groupedData.sort((a, b) => a.sentDate - b.sentDate);
-      return sortedGroupedData;
-  }
+        const sortedGroupedData = groupedData.sort((a, b) => a.orderDate - b.orderDate);
+        return sortedGroupedData;
+    }
 
-  function getOrderDatesPerMonthWithSum(orders) {
-      const groupedData = Object.entries(orders.reduce((acc, { orderDate, sentDate, totalSum }) => {
-          const dateOrdered = new Date(orderDate * 1000);
-          const orderedYear = dateOrdered.getUTCFullYear();
-          const orderedMonth = dateOrdered.getUTCMonth();
+    function findCategoriesByPeriod(orders, beginDate = '1999-01-01', endDate = new Date()) {
+        const catStartDate = Date.parse(beginDate);
+        const catEndDate = Date.parse(endDate);
 
-          const orderKey = new Date(Date.UTC(orderedYear, orderedMonth)).getTime() / 1000;
-          if (!acc[orderKey]) {
-              acc[orderKey] = { totalOrders: 1, totalSum: totalSum };
-          } else {
-              acc[orderKey].totalOrders += 1;
-              acc[orderKey].totalSum += totalSum;
-          }
+        const filteredOrders = orders.filter((order) => {
+            const orderDate = new Date(order.orderDate * 1000);
+            return orderDate >= catStartDate && orderDate <= catEndDate;
+        });
 
-          return acc;
-      }, {})).map(([key, { totalOrders, totalSum }]) => ({
-          orderDate: parseInt(key, 10),
-          totalOrders,
-          totalSum,
-      }));
+        const unsortedCategories = {};
+        filteredOrders.forEach((order) => {
+            order.rows.forEach((item) => {
+                const categories = item.product.categoryTree.split('/');
+                const topLevel = categories[0];
+                const subcategory = categories.length > 1 ? categories[1] : null;
+                const categoryString = topLevel + (subcategory !== null ? `/${subcategory}` : '');
 
-      const sortedGroupedData = groupedData.sort((a, b) => a.orderDate - b.orderDate);
-      return sortedGroupedData;
-  }
+                unsortedCategories[categoryString] = (unsortedCategories[categoryString] || 0) + 1;
+            });
+        });
 
-  function findCategoriesByPeriod(orders, beginDate = "1999-01-01", endDate = new Date()) {
-      const catStartDate = Date.parse(beginDate);
-      const catEndDate = Date.parse(endDate);
+        const sortedKeys = Object.keys(unsortedCategories).sort();
+        const sortedCategories = {};
+        sortedKeys.forEach((key) => { sortedCategories[key] = unsortedCategories[key]; });
 
-      const filteredOrders = orders.filter(order => {
-          const orderDate = new Date(order.orderDate * 1000);
-          return orderDate >= catStartDate && orderDate <= catEndDate;
-      });
+        return sortedCategories;
+    }
 
-      let unsortedCategories = {};
-      filteredOrders.forEach(order => {order.rows.forEach(item => {
-        const categories = item.product.categoryTree.split('/');
-        const topLevel = categories[0];
-        const subcategory = categories.length > 1 ? categories[1] : null;
-        const categoryString = topLevel + (subcategory !== null ? '/' + subcategory : '');
-        
-        unsortedCategories[categoryString] = (unsortedCategories[categoryString] || 0) + 1
-      })});
+    function findOrdersPerMonth(orders) {
+        const monthCounts = {};
+        (getOrderDatesPerMonthWithSum(orders)).forEach((period) => {
+            const currentDate = new Date(period.orderDate * 1000);
+            const yearMonth = `${currentDate.getUTCFullYear()} ${MONTH_NAMES[currentDate.getUTCMonth()]}`;
+            monthCounts[yearMonth] = { totalOrders: period.totalOrders, totalSum: period.totalSum };
+        });
 
-      const sortedKeys = Object.keys(unsortedCategories).sort();
-      const sortedCategories = {};
-      sortedKeys.forEach(key => { sortedCategories[key] = unsortedCategories[key]; });
+        return monthCounts;
+    }
 
-      return sortedCategories;
-  }
+    function findStreaks(orders, minimumSum = 500) {
+        const cheevoStartDate = Date.parse('2015-09-01');
+        const sentDates = getOrderDatesPerMonthWithSumKillstreak(orders);
 
-  function findOrdersPerMonth(orders) {
-      let monthCounts = {};
-      (getOrderDatesPerMonthWithSum(orders)).forEach(period => {
-          const currentDate = new Date(period.orderDate * 1000)
-          const yearMonth = `${currentDate.getUTCFullYear()} ${MONTH_NAMES[currentDate.getUTCMonth()]}`;
-          monthCounts[yearMonth] = {totalOrders: period.totalOrders, totalSum: period.totalSum};
-      });
+        const output = { streaks: [], longestStreak: 0, currentStreak: 0 };
+        let previousDate = null;
+        let lastYearMonth = null;
+        let currentStreakStart = null;
+        for (let i = 0; i < sentDates.length; i += 1) {
+            const currentDate = new Date(sentDates[i].sentDate * 1000);
+            const yearMonth = `${currentDate.getUTCFullYear()} ${MONTH_NAMES[currentDate.getUTCMonth()]}`;
 
-      return monthCounts;
-  }
+            // Only count streaks after Killstreak cheevo creation date
+            // eslint-disable-next-line no-continue
+            if (currentDate < cheevoStartDate) continue;
 
-  function findStreaks(orders, minimumSum = 500) {
-      const cheevoStartDate = Date.parse("2015-09-01");
-      const sentDates = getOrderDatesPerMonthWithSumKillstreak(orders);
-
-      let output = { streaks: [], longestStreak: 0, currentStreak: 0 };
-      let previousDate = null;
-      let lastYearMonth = null;
-      let currentStreakStart = null;
-      for (let i = 0; i < sentDates.length; i++) {
-          const currentDate = new Date(sentDates[i].sentDate * 1000);
-          const yearMonth = `${currentDate.getUTCFullYear()} ${MONTH_NAMES[currentDate.getUTCMonth()]}`;
-
-          // Only count streaks after Killstreak cheevo creation date
-          if (currentDate < cheevoStartDate) continue;
-
-          if (previousDate === null) {
-              previousDate = currentDate;
-              lastYearMonth = yearMonth;
-              currentStreakStart = yearMonth;
-          } else {
-            const m1 = previousDate.getUTCMonth();
-            const m2 = currentDate.getUTCMonth();
-            const isConsecutive = m2 - m1 === 1 || m2 - m1 === -11;
-
-            if (sentDates[i].totalSum >= minimumSum) {
-              if (isConsecutive) {
-                output.currentStreak++;
-              } else {
-                if (output.currentStreak > 0) {
-                  output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
-                }
-                output.currentStreak = 0;
+            if (previousDate === null) {
+                previousDate = currentDate;
+                lastYearMonth = yearMonth;
                 currentStreakStart = yearMonth;
-              }
-              lastYearMonth = yearMonth;
-              previousDate = currentDate;
             } else {
-              if (output.currentStreak > 0) {
-                output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
-              }
-              output.currentStreak = 0;
-              currentStreakStart = yearMonth;
+                const m1 = previousDate.getUTCMonth();
+                const m2 = currentDate.getUTCMonth();
+                const isConsecutive = m2 - m1 === 1 || m2 - m1 === -11;
+
+                if (sentDates[i].totalSum >= minimumSum) {
+                    if (isConsecutive) {
+                        output.currentStreak += 1;
+                    } else {
+                        if (output.currentStreak > 0) {
+                            output.streaks.push({
+                                start: currentStreakStart,
+                                end: lastYearMonth,
+                                months: output.currentStreak,
+                            });
+                        }
+                        output.currentStreak = 0;
+                        currentStreakStart = yearMonth;
+                    }
+                    lastYearMonth = yearMonth;
+                    previousDate = currentDate;
+                } else {
+                    if (output.currentStreak > 0) {
+                        output.streaks.push({
+                            start: currentStreakStart,
+                            end: lastYearMonth,
+                            months: output.currentStreak,
+                        });
+                    }
+                    output.currentStreak = 0;
+                    currentStreakStart = yearMonth;
+                }
+
+                output.longestStreak = Math.max(output.longestStreak, output.currentStreak);
+                lastYearMonth = yearMonth;
+                previousDate = currentDate;
+            }
+        }
+        if (output.currentStreak > 0) {
+            output.streaks.push({
+                start: currentStreakStart,
+                end: lastYearMonth,
+                months: output.currentStreak,
+            });
+        }
+
+        return output;
+    }
+
+    function getExperienceStats(me, orders, achievements, supplyDrops) {
+        const output = {
+            purchases: 0, bonusXP: 0, achievements: 0, supplyDrops: 0, other: 0, total: 0,
+        };
+
+        orders.forEach((order) => {
+            output.purchases += order.totalSum;
+
+            if (order.userExperiencePointBoosts) {
+                order.userExperiencePointBoosts.forEach((boost) => {
+                    output.bonusXP += boost.experiencePoints;
+                });
+            }
+        });
+
+        const earnedAchievements = achievements.achievements.filter(
+            (item) => item.achievedPercentage >= 1,
+        );
+        earnedAchievements.forEach((achievement) => {
+            output.achievements += achievement.experiencePoints;
+        });
+
+        supplyDrops.drops.forEach((drop) => {
+            const xpValue = parseInt(drop.item.description.replace('XP', '').trim(), 10);
+            if (Number.isNaN(xpValue)) return;
+
+            output.supplyDrops += xpValue * drop.count;
+        });
+
+        output.total = output.purchases + output.bonusXP + output.achievements + output.supplyDrops;
+        if (output.total < me.experiencePoints) {
+            output.other = me.experiencePoints - output.total;
+            output.total += output.other;
+        }
+
+        output.purchases = parseInt(output.purchases, 10).toLocaleString('sv');
+        output.bonusXP = parseInt(output.bonusXP, 10).toLocaleString('sv');
+        output.achievements = parseInt(output.achievements, 10).toLocaleString('sv');
+        output.supplyDrops = parseInt(output.supplyDrops, 10).toLocaleString('sv');
+        output.other = output.other.toLocaleString('sv');
+        output.total = output.total.toLocaleString('sv');
+
+        return output;
+    }
+
+    function findTopHoarderCheevoStats(orders, count = 10) {
+        const itemCount = {};
+        orders.forEach((order) => {
+            order.rows.forEach((item) => {
+                const { id } = item.product;
+
+                if (!itemCount[id]) {
+                    itemCount[id] = { id, name: item.product.name, bought: 1 };
+                } else {
+                    itemCount[id].bought += item.quantity;
+                }
+            });
+        });
+
+        const dataArray = Object.values(itemCount);
+        const filteredArray = dataArray.filter((product) => product.bought > 1);
+        filteredArray.sort((a, b) => b.bought - a.bought);
+
+        return filteredArray.slice(0, count);
+    }
+
+    function sortTable(table, columnIndex, headers, headerRow) {
+        let rows;
+        let switching;
+        let i;
+        let x;
+        let y;
+        let shouldSwitch;
+        let dir;
+        let switchcount = 0;
+        switching = true;
+        dir = 'asc'; // Default sorting direction
+
+        while (switching) {
+            switching = false;
+            rows = table.querySelector('tbody').rows;
+
+            for (i = 0; i < rows.length - 1; i += 1) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName('td')[columnIndex];
+                y = rows[i + 1].getElementsByTagName('td')[columnIndex];
+
+                const xContent = x.textContent.toLowerCase();
+                const yContent = y.textContent.toLowerCase();
+
+                // Check if sorting is for string or number
+                if (columnIndex === 0) {
+                    shouldSwitch = dir === 'asc' ? xContent > yContent : xContent < yContent;
+                } else if (columnIndex === 1) {
+                    shouldSwitch = dir === 'asc'
+                        ? parseInt(xContent, 10) > parseInt(yContent, 10)
+                        : parseInt(xContent, 10) < parseInt(yContent, 10);
+                } else if (columnIndex === 2) {
+                    shouldSwitch = dir === 'asc'
+                        ? parseInt(xContent, 10) > parseInt(yContent, 10)
+                        : parseInt(xContent, 10) < parseInt(yContent, 10);
+                }
+
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount += 1;
+                }
             }
 
-            output.longestStreak = Math.max(output.longestStreak, output.currentStreak);
-            lastYearMonth = yearMonth;
-            previousDate = currentDate;
-          }
-      }
-      if (output.currentStreak > 0) {
-        output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
-      }
-
-      return output;
-  }
-
-  function getExperienceStats(me, orders, achievements, supplyDrops) {
-      let output = { 'purchases': 0, 'bonusXP': 0, 'achievements': 0, 'supplyDrops': 0, 'other': 0, 'total': 0 }
-
-      orders.forEach(order => {
-          output.purchases += order.totalSum;
-
-          if (order.userExperiencePointBoosts) {
-              order.userExperiencePointBoosts.forEach(boost => {
-                  output.bonusXP += boost.experiencePoints;
-              });
-          }
-      });
-
-      const earnedAchievements = achievements.achievements.filter(item => item.achievedPercentage >= 1);
-      earnedAchievements.forEach(achievement => { output.achievements += achievement.experiencePoints });
-
-      supplyDrops.drops.forEach(drop => {
-          const xpValue = parseInt(drop.item.description.replace("XP", "").trim());
-          if (isNaN(xpValue)) return;
-
-          output.supplyDrops += xpValue * drop.count;
-      });
-
-      output.total = output.purchases + output.bonusXP + output.achievements + output.supplyDrops;
-      if (output.total < me.experiencePoints) {
-          output.other = me.experiencePoints - output.total;
-          output.total += output.other;
-      }
-
-      output.purchases = parseInt(output.purchases).toLocaleString('sv');
-      output.bonusXP = parseInt(output.bonusXP).toLocaleString('sv');
-      output.achievements = parseInt(output.achievements).toLocaleString('sv');
-      output.supplyDrops = parseInt(output.supplyDrops).toLocaleString('sv');
-      output.other = output.other.toLocaleString('sv');
-      output.total = output.total.toLocaleString('sv');
-
-      return output;
-  }
-
-  function findTopHoarderCheevoStats(orders, count = 10) {
-      let itemCount = {};
-      orders.forEach(order => { order.rows.forEach(item => {
-          const id = item.product.id;
-
-          if (!itemCount[id]) {
-              itemCount[id] = { id: id, name: item.product.name, bought: 1 };
-          } else {
-              itemCount[id].bought += item.quantity;
-          }
-      })});
-
-      const dataArray = Object.values(itemCount);
-      const filteredArray = dataArray.filter(product => product.bought > 1);
-      filteredArray.sort((a, b) => b.bought - a.bought);
-
-      return filteredArray.slice(0, count);
-  }
-
-  function addSortingFunctionality(table, headers) {
-    let thead = table.querySelector("thead");
-    let headerRow = thead.querySelector("tr");
-
-    headerRow.childNodes.forEach(function (header, index) {
-      header.addEventListener("click", function () {
-        sortTable(table, index, headers);
-      });
-    });
-
-    function sortTable(table, columnIndex, headers) {
-      let rows,
-        switching,
-        i,
-        x,
-        y,
-        shouldSwitch,
-        dir,
-        switchcount = 0;
-      switching = true;
-      dir = "asc"; // Default sorting direction
-
-      while (switching) {
-        switching = false;
-        rows = table.querySelector("tbody").rows;
-
-        for (i = 0; i < rows.length - 1; i++) {
-          shouldSwitch = false;
-          x = rows[i].getElementsByTagName("td")[columnIndex];
-          y = rows[i + 1].getElementsByTagName("td")[columnIndex];
-
-          let xContent = x.textContent.toLowerCase();
-          let yContent = y.textContent.toLowerCase();
-
-          // Check if sorting is for string or number
-          if (columnIndex === 0) {
-            shouldSwitch =
-              dir === "asc" ? xContent > yContent : xContent < yContent;
-          } else if (columnIndex === 1) {
-            shouldSwitch =
-              dir === "asc"
-                ? parseInt(xContent) > parseInt(yContent)
-                : parseInt(xContent) < parseInt(yContent);
-          } else if (columnIndex === 2) {
-            shouldSwitch =
-              dir === "asc"
-                ? parseInt(xContent) > parseInt(yContent)
-                : parseInt(xContent) < parseInt(yContent);
-          }
-
-          if (shouldSwitch) {
-            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-            switching = true;
-            switchcount++;
-          }
+            // Toggle the sorting direction if a switch occurred
+            if (switchcount === 0 && dir === 'asc') {
+                dir = 'desc';
+                switching = true;
+            }
         }
 
-        // Toggle the sorting direction if a switch occurred
-        if (switchcount === 0 && dir === "asc") {
-          dir = "desc";
-          switching = true;
-        }
-      }
-
-      // Update header text with arrow indicator
-      let arrow = dir === "asc" ? "▲" : "▼";
-      headerRow.childNodes.forEach(function (header, index) {
-        let arrowIndicator = index === columnIndex ? arrow : "";
-        header.textContent = headers[index] + arrowIndicator;
-      });
+        // Update header text with arrow indicator
+        const arrow = dir === 'asc' ? '▲' : '▼';
+        headerRow.childNodes.forEach((header, index) => {
+            const arrowIndicator = index === columnIndex ? arrow : '';
+            // eslint-disable-next-line no-param-reassign
+            header.textContent = headers[index] + arrowIndicator;
+        });
     }
-  }
 
-  function generateMonthsTable(jsonData) {
-      let table = document.createElement('table');
-      table.className = "table table-condensed table-striped tech-specs-table";
+    function addSortingFunctionality(table, headers) {
+        const thead = table.querySelector('thead');
+        const headerRow = thead.querySelector('tr');
 
-      let thead = document.createElement('thead');
-      let headerRow = document.createElement('tr');
-      let headers = ['År Månad', 'Totalt antal ordrar', 'Total summa'];
-      let finalSum = 0;
-      let finalOrders = 0;
+        headerRow.childNodes.forEach((header, index) => {
+            header.addEventListener('click', () => {
+                sortTable(table, index, headers, headerRow);
+            });
+        });
+    }
 
-      headers.forEach(function(header) {
-          let th = document.createElement('th');
-          th.textContent = header;
-          headerRow.appendChild(th);
-      });
+    function generateMonthsTable(jsonData) {
+        const table = document.createElement('table');
+        table.className = 'table table-condensed table-striped tech-specs-table';
 
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const headers = ['År Månad', 'Totalt antal ordrar', 'Total summa'];
+        let finalSum = 0;
+        let finalOrders = 0;
 
-      let tbody = document.createElement('tbody');
+        headers.forEach((header) => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        });
 
-      for (let month in jsonData) {
-          let row = document.createElement('tr');
-          let data = jsonData[month];
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-          let cell1 = document.createElement('td');
-          let cell2 = document.createElement('td');
-          let cell3 = document.createElement('td');
+        const tbody = document.createElement('tbody');
 
-          cell1.textContent = month;
-          cell2.textContent = data.totalOrders;
-          cell3.textContent = data.totalSum;
+        Object.entries(jsonData).forEach(([month, data]) => {
+            const row = document.createElement('tr');
 
-          finalOrders += data.totalOrders;
-          finalSum += data.totalSum;
+            const cell1 = document.createElement('td');
+            const cell2 = document.createElement('td');
+            const cell3 = document.createElement('td');
 
-          row.appendChild(cell1);
-          row.appendChild(cell2);
-          row.appendChild(cell3);
+            cell1.textContent = month;
+            cell2.textContent = data.totalOrders;
+            cell3.textContent = data.totalSum;
 
-          tbody.appendChild(row);
-      }
+            finalOrders += data.totalOrders;
+            finalSum += data.totalSum;
 
-      let footer = document.createElement('tfoot');
-      let finalRow = document.createElement('tr');
-      let cell1 = document.createElement('td');
-      let cell2 = document.createElement('td');
-      let cell3 = document.createElement('td');
+            row.appendChild(cell1);
+            row.appendChild(cell2);
+            row.appendChild(cell3);
 
-      cell1.innerHTML = "<strong>Totalt</strong>";
-      cell2.innerHTML = `<strong>${finalOrders}</strong>`;
-      cell3.innerHTML = `<strong>${finalSum}</strong>`;
+            tbody.appendChild(row);
+        });
 
-      finalRow.appendChild(cell1);
-      finalRow.appendChild(cell2);
-      finalRow.appendChild(cell3);
-      footer.appendChild(finalRow);
+        const footer = document.createElement('tfoot');
+        const finalRow = document.createElement('tr');
+        const cell1 = document.createElement('td');
+        const cell2 = document.createElement('td');
+        const cell3 = document.createElement('td');
 
-      table.appendChild(tbody);
-      table.appendChild(footer);
+        cell1.innerHTML = '<strong>Totalt</strong>';
+        cell2.innerHTML = `<strong>${finalOrders}</strong>`;
+        cell3.innerHTML = `<strong>${finalSum}</strong>`;
 
-      addSortingFunctionality(table, headers);
+        finalRow.appendChild(cell1);
+        finalRow.appendChild(cell2);
+        finalRow.appendChild(cell3);
+        footer.appendChild(finalRow);
 
-      return table;
-  }
+        table.appendChild(tbody);
+        table.appendChild(footer);
 
-  function generateStreaksTable(jsonData) {
-      let div = document.createElement('div');
+        addSortingFunctionality(table, headers);
 
-      let table1 = document.createElement('table');
-      table1.className = "table table-condensed table-striped tech-specs-table";
+        return table;
+    }
 
-      let thead1 = document.createElement('thead');
-      let headerRow1 = document.createElement('tr');
-      let headers1 = ['Längsta streak', 'Nuvarande streak'];
+    function generateStreaksTable(jsonData) {
+        const div = document.createElement('div');
 
-      headers1.forEach(function(header) {
-          let th = document.createElement('th');
-          th.textContent = header;
-          headerRow1.appendChild(th);
-      });
+        const table1 = document.createElement('table');
+        table1.className = 'table table-condensed table-striped tech-specs-table';
 
-      thead1.appendChild(headerRow1);
-      table1.appendChild(thead1);
+        const thead1 = document.createElement('thead');
+        const headerRow1 = document.createElement('tr');
+        const headers1 = ['Längsta streak', 'Nuvarande streak'];
 
-      let tbody1 = document.createElement('tbody');
-      let row1 = document.createElement('tr');
-      let cell1_1 = document.createElement('td');
-      let cell1_2 = document.createElement('td');
+        headers1.forEach((header) => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow1.appendChild(th);
+        });
 
-      cell1_1.textContent = jsonData.longestStreak;
-      cell1_2.textContent = jsonData.currentStreak;
+        thead1.appendChild(headerRow1);
+        table1.appendChild(thead1);
 
-      row1.appendChild(cell1_1);
-      row1.appendChild(cell1_2);
+        const tbody1 = document.createElement('tbody');
+        const row1 = document.createElement('tr');
+        const table1Cell1 = document.createElement('td');
+        const table1Cell2 = document.createElement('td');
 
-      tbody1.appendChild(row1);
-      table1.appendChild(tbody1);
+        table1Cell1.textContent = jsonData.longestStreak;
+        table1Cell2.textContent = jsonData.currentStreak;
 
-      /* --- */
+        row1.appendChild(table1Cell1);
+        row1.appendChild(table1Cell2);
 
-      let table2 = document.createElement('table');
-      table2.className = "table table-condensed table-striped tech-specs-table";
+        tbody1.appendChild(row1);
+        table1.appendChild(tbody1);
 
-      let thead2 = document.createElement('thead');
-      let headerRow2 = document.createElement('tr');
-      let headers2 = ['Streak började', 'Streak slutade', 'Antal månader'];
+        /* --- */
 
-      headers2.forEach(function(header) {
-          let th = document.createElement('th');
-          th.textContent = header;
-          headerRow2.appendChild(th);
-      });
+        const table2 = document.createElement('table');
+        table2.className = 'table table-condensed table-striped tech-specs-table';
 
-      thead2.appendChild(headerRow2);
-      table2.appendChild(thead2);
+        const thead2 = document.createElement('thead');
+        const headerRow2 = document.createElement('tr');
+        const headers2 = ['Streak började', 'Streak slutade', 'Antal månader'];
 
-      let tbody2 = document.createElement('tbody');
+        headers2.forEach((header) => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow2.appendChild(th);
+        });
 
-      jsonData.streaks.forEach(streak => {
-          let row2 = document.createElement('tr');
-          let cell2_1 = document.createElement('td');
-          let cell2_2 = document.createElement('td');
-          let cell2_3 = document.createElement('td');
+        thead2.appendChild(headerRow2);
+        table2.appendChild(thead2);
 
-          cell2_1.textContent = streak.start;
-          cell2_2.textContent = streak.end;
-          cell2_3.textContent = streak.months;
+        const tbody2 = document.createElement('tbody');
 
-          row2.appendChild(cell2_1);
-          row2.appendChild(cell2_2);
-          row2.appendChild(cell2_3);
+        jsonData.streaks.forEach((streak) => {
+            const row2 = document.createElement('tr');
+            const table2Cell1 = document.createElement('td');
+            const table2Cell2 = document.createElement('td');
+            const table2Cell3 = document.createElement('td');
 
-          tbody2.appendChild(row2);
-      });
+            table2Cell1.textContent = streak.start;
+            table2Cell2.textContent = streak.end;
+            table2Cell3.textContent = streak.months;
 
-      table2.appendChild(tbody2);
+            row2.appendChild(table2Cell1);
+            row2.appendChild(table2Cell2);
+            row2.appendChild(table2Cell3);
 
-      div.appendChild(table1);
-      div.appendChild(table2);
+            tbody2.appendChild(row2);
+        });
 
-      return div;
-  }
+        table2.appendChild(tbody2);
 
-  function generateCategoriesTable(jsonData) {
-      let table = document.createElement('table');
-      table.className = "table table-condensed table-striped tech-specs-table";
+        div.appendChild(table1);
+        div.appendChild(table2);
 
-      let thead = document.createElement('thead');
-      let headerRow = document.createElement('tr');
-      let headers = ['Kategori', 'Antal produkter'];
+        return div;
+    }
 
-      headers.forEach(function(header) {
-          let th = document.createElement('th');
-          th.textContent = header;
-          headerRow.appendChild(th);
-      });
+    function generateCategoriesTable(jsonData) {
+        const table = document.createElement('table');
+        table.className = 'table table-condensed table-striped tech-specs-table';
 
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const headers = ['Kategori', 'Antal produkter'];
 
-      let tbody = document.createElement('tbody');
+        headers.forEach((header) => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        });
 
-      for (let category in jsonData) {
-          let row = document.createElement('tr');
-          let data = jsonData[category];
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-          let cell1 = document.createElement('td');
-          let cell2 = document.createElement('td');
+        const tbody = document.createElement('tbody');
 
-          cell1.textContent = category;
-          cell2.textContent = data;
+        Object.entries(jsonData).forEach(([category, data]) => {
+            const row = document.createElement('tr');
 
-          row.appendChild(cell1);
-          row.appendChild(cell2);
+            const cell1 = document.createElement('td');
+            const cell2 = document.createElement('td');
 
-          tbody.appendChild(row);
-      }
+            cell1.textContent = category;
+            cell2.textContent = data;
 
-      table.appendChild(tbody);
+            row.appendChild(cell1);
+            row.appendChild(cell2);
 
-      addSortingFunctionality(table, headers);
+            tbody.appendChild(row);
+        });
 
-      return table;
-  }
+        table.appendChild(tbody);
 
-  function generateHoarderTable(jsonData) {
-      let table = document.createElement('table');
-      table.className = "table table-condensed table-striped tech-specs-table";
+        addSortingFunctionality(table, headers);
 
-      let thead = document.createElement('thead');
-      let headerRow = document.createElement('tr');
-      let headers = ['Produkt', 'Antal köpta'];
+        return table;
+    }
 
-      headers.forEach(function(header) {
-          let th = document.createElement('th');
-          th.textContent = header;
-          headerRow.appendChild(th);
-      });
+    function generateHoarderTable(jsonData) {
+        const table = document.createElement('table');
+        table.className = 'table table-condensed table-striped tech-specs-table';
 
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const headers = ['Produkt', 'Antal köpta'];
 
-      let tbody = document.createElement('tbody');
+        headers.forEach((header) => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        });
 
-      jsonData.forEach(product => {
-          let row = document.createElement('tr');
-          let cell1 = document.createElement('td');
-          let cell2 = document.createElement('td');
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-          let link = document.createElement('a');
-          link.href = "https://www.webhallen.com/" + product.id;
-          link.appendChild(document.createTextNode("[" + product.id + "] " + product.name));
+        const tbody = document.createElement('tbody');
 
-          cell1.appendChild(link);
-          cell2.textContent = product.bought;
+        jsonData.forEach((product) => {
+            const row = document.createElement('tr');
+            const cell1 = document.createElement('td');
+            const cell2 = document.createElement('td');
 
-          row.appendChild(cell1);
-          row.appendChild(cell2);
+            const link = document.createElement('a');
+            link.href = `https://www.webhallen.com/${product.id}`;
+            link.appendChild(document.createTextNode(`[${product.id}] ${product.name}`));
 
-          tbody.appendChild(row);
-      });
+            cell1.appendChild(link);
+            cell2.textContent = product.bought;
 
-      table.appendChild(tbody);
+            row.appendChild(cell1);
+            row.appendChild(cell2);
 
-      return table;
-  }
+            tbody.appendChild(row);
+        });
 
-  function generateExperienceTable(jsonData) {
-      let table = document.createElement('table');
-      table.className = "table table-condensed table-striped tech-specs-table";
+        table.appendChild(tbody);
 
-      let thead = document.createElement('thead');
-      let headerRow = document.createElement('tr');
-      let headers = ['Köp XP', 'Bonus XP', 'Cheevo XP', 'Supply drop XP', 'Övriga XP', 'Totalt'];
+        return table;
+    }
 
-      headers.forEach(function(header) {
-          let th = document.createElement('th');
-          th.textContent = header;
-          headerRow.appendChild(th);
-      });
+    function generateExperienceTable(jsonData) {
+        const table = document.createElement('table');
+        table.className = 'table table-condensed table-striped tech-specs-table';
 
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const headers = ['Köp XP', 'Bonus XP', 'Cheevo XP', 'Supply drop XP', 'Övriga XP', 'Totalt'];
 
-      let tbody = document.createElement('tbody');
+        headers.forEach((header) => {
+            const th = document.createElement('th');
+            th.textContent = header;
+            headerRow.appendChild(th);
+        });
 
-      let row = document.createElement('tr');
-      let cell1 = document.createElement('td');
-      let cell2 = document.createElement('td');
-      let cell3 = document.createElement('td');
-      let cell4 = document.createElement('td');
-      let cell5 = document.createElement('td');
-      let cell6 = document.createElement('td');
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
-      cell1.textContent = jsonData.purchases;
-      cell2.textContent = jsonData.bonusXP;
-      cell3.textContent = jsonData.achievements;
-      cell4.textContent = jsonData.supplyDrops;
-      cell5.textContent = jsonData.other;
-      cell6.textContent = jsonData.total;
+        const tbody = document.createElement('tbody');
 
-      row.appendChild(cell1);
-      row.appendChild(cell2);
-      row.appendChild(cell3);
-      row.appendChild(cell4);
-      row.appendChild(cell5);
-      row.appendChild(cell6);
+        const row = document.createElement('tr');
+        const cell1 = document.createElement('td');
+        const cell2 = document.createElement('td');
+        const cell3 = document.createElement('td');
+        const cell4 = document.createElement('td');
+        const cell5 = document.createElement('td');
+        const cell6 = document.createElement('td');
 
-      tbody.appendChild(row);
+        cell1.textContent = jsonData.purchases;
+        cell2.textContent = jsonData.bonusXP;
+        cell3.textContent = jsonData.achievements;
+        cell4.textContent = jsonData.supplyDrops;
+        cell5.textContent = jsonData.other;
+        cell6.textContent = jsonData.total;
 
-      table.appendChild(tbody);
+        row.appendChild(cell1);
+        row.appendChild(cell2);
+        row.appendChild(cell3);
+        row.appendChild(cell4);
+        row.appendChild(cell5);
+        row.appendChild(cell6);
 
-      return table;
-  }
+        tbody.appendChild(row);
 
-  function addDataToDiv(headerText, domObject) {
-      let div = document.createElement('div');
-      div.className = "order my-4";
+        table.appendChild(tbody);
 
-      let table = document.createElement('table');
-      table.className = 'table table-condensed';
+        return table;
+    }
 
-      let tbody = document.createElement('tbody');
+    function addDataToDiv(headerText, domObject) {
+        const div = document.createElement('div');
+        div.className = 'order my-4';
 
-      let tr = document.createElement('tr');
-      tr.className = 'order-id-wrap';
+        const table = document.createElement('table');
+        table.className = 'table table-condensed';
 
-      let td = document.createElement('td');
-      td.textContent = headerText;
+        const tbody = document.createElement('tbody');
 
-      tr.appendChild(td);
-      tbody.appendChild(tr);
-      table.appendChild(tbody);
-      div.appendChild(table);
+        const tr = document.createElement('tr');
+        tr.className = 'order-id-wrap';
 
+        const td = document.createElement('td');
+        td.textContent = headerText;
 
-      let div1 = document.createElement('div');
-      let div2 = document.createElement('div');
-      let orderProgression = document.createElement('div');
-      let innerContainer = document.createElement('div');
-      let orderStatusEvent = document.createElement('div');
-      let icon = document.createElement('div');
-      let header = document.createElement('h3');
-      let secondary = document.createElement('div');
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        table.appendChild(tbody);
+        div.appendChild(table);
 
-      div1.appendChild(div2);
-      div2.appendChild(orderProgression);
-      orderProgression.appendChild(innerContainer);
-      innerContainer.appendChild(orderStatusEvent);
-      orderStatusEvent.appendChild(icon);
-      orderStatusEvent.appendChild(header);
-      orderStatusEvent.appendChild(secondary);
-      secondary.appendChild(domObject);
+        const div1 = document.createElement('div');
+        const div2 = document.createElement('div');
+        const orderProgression = document.createElement('div');
+        const innerContainer = document.createElement('div');
+        const orderStatusEvent = document.createElement('div');
+        const icon = document.createElement('div');
+        const header = document.createElement('h3');
+        const secondary = document.createElement('div');
 
-      header.className = 'level-two-heading';
-      icon.className = 'icon';
+        div1.appendChild(div2);
+        div2.appendChild(orderProgression);
+        orderProgression.appendChild(innerContainer);
+        innerContainer.appendChild(orderStatusEvent);
+        orderStatusEvent.appendChild(icon);
+        orderStatusEvent.appendChild(header);
+        orderStatusEvent.appendChild(secondary);
+        secondary.appendChild(domObject);
 
-      header.textContent = '';
+        header.className = 'level-two-heading';
+        icon.className = 'icon';
 
-      div.appendChild(div1);
+        header.textContent = '';
 
-      return div;
-  }
+        div.appendChild(div1);
 
-  function findInjectPath(paths) {
-      let dom = null;
-      paths.forEach(path => {
-          const d = document.querySelector(path);
-          if (d) {
-              dom = d;
-              return;
-          }
-      });
+        return div;
+    }
 
-      return dom;
-  }
+    function findInjectPath(paths) {
+        let dom = null;
+        paths.forEach((path) => {
+            const d = document.querySelector(path);
+            if (d) {
+                dom = d;
+            }
+        });
 
-  async function _clearAndAddStatistics(event) {
-      event.preventDefault();
-      let clickedLink = event.target;
+        return dom;
+    }
 
-      let allLinks = document.querySelectorAll('.router-link-exact-active.router-link-active');
-      allLinks.forEach(function(link) {
-          link.classList.remove('router-link-exact-active', 'router-link-active');
-      });
+    async function clearAndAddStatistics(event) {
+        event.preventDefault();
+        const clickedLink = event.target;
 
-      clickedLink.classList.add('router-link-exact-active', 'router-link-active');
+        const allLinks = document.querySelectorAll('.router-link-exact-active.router-link-active');
+        allLinks.forEach((link) => {
+            link.classList.remove('router-link-exact-active', 'router-link-active');
+        });
 
-      let content = `
+        clickedLink.classList.add('router-link-exact-active', 'router-link-active');
+
+        const content = `
       <h2 class="level-one-heading mb-5">Min statistik</h2><hr>
       <div class="mb-5">Här hittar du statistik om din aktivitet på webhallen.</div>
-      `
+      `;
 
-      let paths = ['section',
-                   'div.member-subpage',
-                   'div.container'];
-      let injectPath = findInjectPath(paths);
-      injectPath.innerHTML = content;
+        const paths = ['section',
+            'div.member-subpage',
+            'div.container'];
+        const injectPath = findInjectPath(paths);
+        injectPath.innerHTML = content;
 
-      let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      let image = document.createElementNS("http://www.w3.org/2000/svg", "image");
-      image.setAttribute("href", 'https://cdn.webhallen.com/img/loading_light.svg');
-      svg.appendChild(image);
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        image.setAttribute('href', 'https://cdn.webhallen.com/img/loading_light.svg');
+        svg.appendChild(image);
 
-      injectPath.appendChild(svg);
+        injectPath.appendChild(svg);
 
-      let orders = await fetchOrders(ME.id);
-      let supplyDrops = await fetchSupplyDrops(ME.id);
-      let achievements = await fetchAchievements(ME.id);
+        const orders = await fetchOrders(ME.id);
+        const supplyDrops = await fetchSupplyDrops(ME.id);
+        const achievements = await fetchAchievements(ME.id);
 
-      injectPath.innerHTML = content;
+        injectPath.innerHTML = content;
 
-      if (orders) {
-          const experience = getExperienceStats(ME, orders, achievements, supplyDrops);
-          if (experience) {
-              injectPath.appendChild(addDataToDiv("Experience", generateExperienceTable(experience)));
-          }
+        if (orders) {
+            const experience = getExperienceStats(ME, orders, achievements, supplyDrops);
+            if (experience) {
+                injectPath.appendChild(addDataToDiv('Experience', generateExperienceTable(experience)));
+            }
 
-          const streaks = findStreaks(orders);
-          if (streaks) {
-              injectPath.appendChild(addDataToDiv("Streaks", generateStreaksTable(streaks)));
-          }
+            const streaks = findStreaks(orders);
+            if (streaks) {
+                injectPath.appendChild(addDataToDiv('Streaks', generateStreaksTable(streaks)));
+            }
 
-          const hoarder = findTopHoarderCheevoStats(orders, 10);
-          if (hoarder) {
-              injectPath.appendChild(addDataToDiv("Hoarder Top 10", generateHoarderTable(hoarder)));
-          }
+            const hoarder = findTopHoarderCheevoStats(orders, 10);
+            if (hoarder) {
+                injectPath.appendChild(addDataToDiv('Hoarder Top 10', generateHoarderTable(hoarder)));
+            }
 
-          const categories = findCategoriesByPeriod(orders);
-          if (categories) {
-              injectPath.appendChild(addDataToDiv("Kategorier", generateCategoriesTable(categories)));
-          }
+            const categories = findCategoriesByPeriod(orders);
+            if (categories) {
+                injectPath.appendChild(addDataToDiv('Kategorier', generateCategoriesTable(categories)));
+            }
 
-          const orderMonths = findOrdersPerMonth(orders);
-          if (orderMonths) {
-              injectPath.appendChild(addDataToDiv("Ordrar per månad", generateMonthsTable(orderMonths)));
-          }
-      }
-  }
+            const orderMonths = findOrdersPerMonth(orders);
+            if (orderMonths) {
+                injectPath.appendChild(addDataToDiv('Ordrar per månad', generateMonthsTable(orderMonths)));
+            }
+        }
+    }
 
-  function addLink() {
-      clearInterval(timerId);
-      let ul = document.querySelector('.member-nav .desktop-wrap .nav');
+    function addLink() {
+        clearInterval(timerId);
+        const ul = document.querySelector('.member-nav .desktop-wrap .nav');
 
-      if (ul) {
-          let li = document.createElement('li');
-          li.className = 'tile';
-          let link = document.createElement('a');
-          link.href = '#';
+        if (ul) {
+            const li = document.createElement('li');
+            li.className = 'tile';
+            const link = document.createElement('a');
+            link.href = '#';
 
-          let image = document.createElement('img');
-          image.src = '//cdn.webhallen.com/img/icons/member/topplistor.svg';
-          image.className = 'member-icon';
-          image.alt = 'Statistik';
+            const image = document.createElement('img');
+            image.src = '//cdn.webhallen.com/img/icons/member/topplistor.svg';
+            image.className = 'member-icon';
+            image.alt = 'Statistik';
 
-          link.appendChild(image);
-          link.appendChild(document.createTextNode('Statistik'));
-          link.addEventListener('click', _clearAndAddStatistics);
-          li.appendChild(link);
-          ul.appendChild(li);
-      } else {
-          console.error("UL element not found using XPath.");
-      }
-  }
+            link.appendChild(image);
+            link.appendChild(document.createTextNode('Statistik'));
+            link.addEventListener('click', clearAndAddStatistics);
+            li.appendChild(link);
+            ul.appendChild(li);
+        } else {
+            console.error('UL element not found using XPath.');
+        }
+    }
 
-  async function main() {
-      ME = await fetchMe();
-      if (!ME) return;
+    async function main() {
+        ME = await fetchMe();
+        if (!ME) return;
 
-      addLink();
-  }
+        addLink();
+    }
 
-  let timerId = setInterval(main, 1000);
-})();
+    let timerId = setInterval(main, 1000);
+}());
