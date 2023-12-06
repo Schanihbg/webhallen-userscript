@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Webhallen user stats
 // @namespace    Webhallen
-// @version      0.7
+// @version      0.8
 // @description  Generate a statistics button and present a wide variety of stats from the users account. Note: This is a proof of concept and could be highly unstable, use at your own risk!
 // @author       Schanii, tsjost, and Furiiku
 // @match        https://www.webhallen.com/se/member/*
@@ -184,34 +184,46 @@
           const currentDate = new Date(sentDates[i].sentDate * 1000);
           const yearMonth = `${currentDate.getUTCFullYear()} ${MONTH_NAMES[currentDate.getUTCMonth()]}`;
 
-          // Only count streaks after Killstreak cheevo creation date and minimum total sum
+          // Only count streaks after Killstreak cheevo creation date
           if (currentDate < cheevoStartDate) continue;
 
           if (previousDate === null) {
               previousDate = currentDate;
               lastYearMonth = yearMonth;
               currentStreakStart = yearMonth;
-              output.currentStreak = 0;
           } else {
-              const m1 = previousDate.getUTCMonth();
-              const m2 = currentDate.getUTCMonth();
-              const isConsecutive = m2 - m1 === 1 || m2 - m1 === -11;
+            const m1 = previousDate.getUTCMonth();
+            const m2 = currentDate.getUTCMonth();
+            const isConsecutive = m2 - m1 === 1 || m2 - m1 === -11;
 
-              if (sentDates[i].totalSum < minimumSum || (previousDate.getUTCMonth() !== currentDate.getUTCMonth() && !isConsecutive)) {
+            if (sentDates[i].totalSum >= minimumSum) {
+              if (isConsecutive) {
+                output.currentStreak++;
+              } else {
                 if (output.currentStreak > 0) {
                   output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
                 }
                 output.currentStreak = 0;
                 currentStreakStart = yearMonth;
-              } else if (previousDate.getUTCMonth() !== currentDate.getUTCMonth()) {
-                output.currentStreak++;
               }
-              output.longestStreak = Math.max(output.longestStreak, output.currentStreak);
               lastYearMonth = yearMonth;
               previousDate = currentDate;
+            } else {
+              if (output.currentStreak > 0) {
+                output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
+              }
+              output.currentStreak = 0;
+              currentStreakStart = yearMonth;
+            }
+
+            output.longestStreak = Math.max(output.longestStreak, output.currentStreak);
+            lastYearMonth = yearMonth;
+            previousDate = currentDate;
           }
       }
-      output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
+      if (output.currentStreak > 0) {
+        output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
+      }
 
       return output;
   }
