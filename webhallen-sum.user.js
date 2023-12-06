@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Webhallen user stats
 // @namespace    Webhallen
-// @version      0.6
+// @version      0.7
 // @description  Generate a statistics button and present a wide variety of stats from the users account. Note: This is a proof of concept and could be highly unstable, use at your own risk!
 // @author       Schanii, tsjost, and Furiiku
 // @match        https://www.webhallen.com/se/member/*
@@ -102,11 +102,11 @@
 
           return acc;
       }, {})).map(([key, { totalSum }]) => ({
-          orderDate: parseInt(key, 10),
+          sentDate: parseInt(key, 10),
           totalSum,
       }));
 
-      const sortedGroupedData = groupedData.sort((a, b) => a.orderDate - b.orderDate);
+      const sortedGroupedData = groupedData.sort((a, b) => a.sentDate - b.sentDate);
       return sortedGroupedData;
   }
 
@@ -174,35 +174,37 @@
 
   function findStreaks(orders, minimumSum = 500) {
       const cheevoStartDate = Date.parse("2015-09-01");
-      const orderDates = getOrderDatesPerMonthWithSumKillstreak(orders);
+      const sentDates = getOrderDatesPerMonthWithSumKillstreak(orders);
 
-      let output = { streaks: [], longestStreak: 0, currentStreak: 1 }
+      let output = { streaks: [], longestStreak: 0, currentStreak: 0 };
       let previousDate = null;
       let lastYearMonth = null;
       let currentStreakStart = null;
-      for (let i = 0; i < orderDates.length; i++) {
-          const currentDate = new Date(orderDates[i].orderDate * 1000);
+      for (let i = 0; i < sentDates.length; i++) {
+          const currentDate = new Date(sentDates[i].sentDate * 1000);
           const yearMonth = `${currentDate.getUTCFullYear()} ${MONTH_NAMES[currentDate.getUTCMonth()]}`;
 
           // Only count streaks after Killstreak cheevo creation date and minimum total sum
-          if (currentDate < cheevoStartDate || orderDates[i].totalSum < minimumSum) continue;
+          if (currentDate < cheevoStartDate) continue;
 
           if (previousDate === null) {
               previousDate = currentDate;
               lastYearMonth = yearMonth;
               currentStreakStart = yearMonth;
-              output.currentStreak = 1;
+              output.currentStreak = 0;
           } else {
-              const m1 = previousDate.getMonth();
-              const m2 = currentDate.getMonth();
+              const m1 = previousDate.getUTCMonth();
+              const m2 = currentDate.getUTCMonth();
               const isConsecutive = m2 - m1 === 1 || m2 - m1 === -11;
 
-              if (previousDate.getMonth() !== currentDate.getMonth() && !isConsecutive) {
+              if (sentDates[i].totalSum < minimumSum || (previousDate.getUTCMonth() !== currentDate.getUTCMonth() && !isConsecutive)) {
+                if (output.currentStreak > 0) {
                   output.streaks.push({start: currentStreakStart, end: lastYearMonth, months: output.currentStreak});
-                  output.currentStreak = 1;
-                  currentStreakStart = yearMonth;
-              } else if (previousDate.getMonth() !== currentDate.getMonth()) {
-                  output.currentStreak++;
+                }
+                output.currentStreak = 0;
+                currentStreakStart = yearMonth;
+              } else if (previousDate.getUTCMonth() !== currentDate.getUTCMonth()) {
+                output.currentStreak++;
               }
               output.longestStreak = Math.max(output.longestStreak, output.currentStreak);
               lastYearMonth = yearMonth;
