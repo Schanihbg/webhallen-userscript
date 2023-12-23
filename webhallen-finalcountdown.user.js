@@ -5,7 +5,7 @@
 // ==UserScript==
 // @name         Webhallen [Final Countdown]
 // @namespace    Webhallen
-// @version      0.1
+// @version      0.2
 // @description  Check what days a user is missing for Final Countdown cheevo
 // @author       Furiiku
 // @match        https://www.webhallen.com/*
