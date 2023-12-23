@@ -108,7 +108,6 @@
     function createButton() {
         const node = document.querySelector('.achievements-sub-header');
         const cheevoNode = document.querySelector('.check-cheevos');
-        console.log(`${node} - ${cheevoNode}`);
         if (node && !cheevoNode) {
             const div = document.createElement('div');
             div.classList = ('toggle-wrapper', 'check-cheevos');
@@ -139,7 +138,6 @@
 
     function checkURLChange() {
         if (currentURL !== window.location.href) {
-            console.log('URL has changed:', window.location.href);
             currentURL = window.location.href;
             main();
         }
@@ -147,10 +145,4 @@
     }
 
     checkURLChange();
-    const date = new Date(1671923678 * 1000);
-    console.log(dateWithinRange(date));
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const dateKey = `${day}/${month < 10 ? '0' : ''}${month}`;
-    console.log(dateKey);
 }());
