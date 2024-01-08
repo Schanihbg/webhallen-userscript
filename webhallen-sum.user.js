@@ -5,7 +5,7 @@
 // ==UserScript==
 // @name         Webhallen user stats
 // @namespace    Webhallen
-// @version      0.8
+// @version      0.9
 // @description  Generate a statistics button and present a wide variety of stats from the users account. Note: This is a proof of concept and could be highly unstable, use at your own risk!
 // @author       Schanii, tsjost, and Furiiku
 // @match        https://www.webhallen.com/se/member/*
