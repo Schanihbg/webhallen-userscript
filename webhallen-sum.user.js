@@ -10,8 +10,10 @@
 // @author       Schanii, tsjost, and Furiiku
 // @match        https://www.webhallen.com/se/member/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=webhallen.com
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
+
+GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");');
 
 (function () {
     'use strict';
@@ -305,6 +307,31 @@
         output.total = output.total.toLocaleString('sv');
 
         return output;
+    }
+
+    function getStoreStats(orders) {
+        const storePurchases = orders.reduce((stores, order) => {
+            const storeName = order.store?.name ?? 'N/A';
+            stores[storeName] = (stores[storeName] || 0) + 1;
+            return stores;
+        }, {});
+
+        const stores = new Map;
+        Object
+        .entries(storePurchases)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([store, purchases]) => { stores.set(store, purchases) });
+
+        const values = Array.from(stores.values());
+        const minValue = Math.min(...values);
+        const maxValue = Math.max(...values);
+
+        for (const [store, purchases] of stores) {
+            const normalizedValue = 0.1 + 0.9 * (purchases - minValue) / (maxValue - minValue);
+            stores.set(store, { purchases, normalizedValue });
+        }
+
+        return new Map([...stores.entries()].sort((a, b) => a[1].normalizedValue - b[1].normalizedValue));
     }
 
     function findTopHoarderCheevoStats(orders, count = 10) {
@@ -673,6 +700,70 @@
         return table;
     }
 
+    function generateStoresChart(orders) {
+        const div = document.createElement('div');
+        div.setAttribute('id', 'stores-chart');
+        div.style.width = "100%";
+        div.style.maxWidth = '900px';
+        div.style.margin = '0 auto';
+        div.style.display = 'flex';
+        div.style.flexDirection = 'row';
+        div.style.gap = '40px';
+
+        const table = document.createElement('table');
+        table.className = 'table table-condensed charts-css pie hide-data show-primary-axis';
+
+        const thead = document.createElement('thead');
+        const theadtr = document.createElement('tr');
+        const thStore = document.createElement('th');
+        thStore.scope = 'col';
+        const thCount = document.createElement('th')
+        thCount.scope = 'col';
+
+        theadtr.appendChild(thStore);
+        theadtr.appendChild(thCount);
+        thead.appendChild(theadtr);
+
+        const tbody = document.createElement('tbody');
+        const ul = document.createElement('ul');
+        ul.className = "charts-css legend legend-square";
+
+        let prev = 0;
+        orders.forEach((value, store) => {
+            console.log(`${store}: Purchases = ${value.purchases}, Normalized Value = ${value.normalizedValue}`);
+            const tr = document.createElement('tr');
+            const th = document.createElement('th');
+            th.scope = 'col';
+            th.textContent = store;
+
+            const td = document.createElement('td');
+            td.style = `--start: ${prev}; --end: ${value.normalizedValue};`;
+            prev = value.normalizedValue;
+
+            const span = document.createElement('span');
+            span.className = "data";
+            span.textContent = value.purchases
+
+            td.appendChild(span);
+
+            tr.appendChild(th);
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+
+            const li = document.createElement('li');
+            li.textContent = `${store}: ${value.purchases}`;
+            ul.appendChild(li);
+        })
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+
+        div.appendChild(table);
+        div.appendChild(ul);
+
+        return div;
+    }
+
     function addDataToDiv(headerText, domObject) {
         const div = document.createElement('div');
         div.className = 'order my-4';
@@ -772,6 +863,11 @@
             const experience = getExperienceStats(ME, orders, achievements, supplyDrops);
             if (experience) {
                 injectPath.appendChild(addDataToDiv('Experience', generateExperienceTable(experience)));
+            }
+
+            const stores = getStoreStats(orders);
+            if (stores) {
+                injectPath.appendChild(addDataToDiv('Stores', generateStoresChart(stores)));
             }
 
             const streaks = findStreaks(orders);
