@@ -19,12 +19,11 @@ export const getStoreStats = (orders: Order[]): Map<string, StoreSum> => {
     .forEach(([store, purchases]) => { stores.set(store, purchases) })
 
   const values = Array.from(stores.values())
-  const minValue = Math.min(...values)
-  const maxValue = Math.max(...values)
+  const sumValues = values.reduce((a, b) => a + b, 0)
 
   const storesNormalized = new Map<string, StoreSum>()
   for (const [store, purchases] of stores) {
-    const normalizedValue = 0.1 + 0.9 * (purchases - minValue) / (maxValue - minValue)
+    const normalizedValue = (purchases / sumValues)
     storesNormalized.set(store, { purchases, normalizedValue })
   }
 
