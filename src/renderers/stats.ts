@@ -549,6 +549,9 @@ async function _clearAndAddStatistics (event: MouseEvent): Promise<void> {
 }
 
 export function addStatisticsLink (): void {
+  const statsLink = document.querySelector('.member-nav li img[alt="Statistik"]')
+  if (statsLink) return
+
   const ul = document.querySelector('.member-nav .desktop-wrap .nav')
 
   if (ul) {

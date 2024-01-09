@@ -7,4 +7,5 @@
 // @match        https://www.webhallen.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=webhallen.com
 // @grant        GM_addStyle
+// @grant        window.onurlchange
 // ==/UserScript==
