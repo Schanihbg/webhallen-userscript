@@ -72,3 +72,46 @@ export const fetchSupplyDrops = async (): Promise<Drop[]> => {
   const data = await fetchAPI<SupplyDropResponse>('https://www.webhallen.com/api/supply-drop/')
   return data.drops
 }
+
+export interface ProductData {
+  id: number
+  name: string
+  thumbnail: string
+  data: Record<string, Record<string, string>>
+}
+export async function fetchProductData (productId: string | number): Promise<ProductData | null> {
+  try {
+    const url = new URL(`/api/product/${productId}`, 'https://www.webhallen.com')
+    const { product } = await fetch(url)
+      .then(async (response) => {
+        return await response.json()
+      })
+
+    if (!product?.data) {
+      console.warn(`Article ${productId} does not contain any data to compare against.`)
+      return null
+    }
+
+    const filteredProduct = {
+      id: product.id,
+      name: product.name.split('/')[0].trim(),
+      thumbnail: product.thumbnail,
+      data: {},
+    } as ProductData
+
+    for (const header in product.data) {
+      if (!filteredProduct.data[header]) {
+        filteredProduct.data[header] = {}
+      }
+
+      for (const attribute in product.data[header]) {
+        filteredProduct.data[header][attribute] = product.data[header][attribute].value
+      }
+    }
+
+    return filteredProduct
+  } catch (error) {
+    console.error(error)
+    return null
+  }
+}
