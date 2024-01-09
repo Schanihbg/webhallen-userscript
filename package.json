@@ -1,0 +1,38 @@
+{
+  "name": "webhallen-sum-userscript",
+  "version": "0.0.9",
+  "description": "Adds a statistics page in the user profile section and adds product comparison functionality on applicable products",
+  "main": "dist/webhallen.user.js",
+  "scripts": {
+    "build": "npm run build:compile && npm run build:header && npm run build:merge && npm run build:cleanup",
+    "build:compile": "npx esbuild --bundle src/userscript.ts --outdir=dist",
+    "build:header": "npx envsub --env USER_SCRIPT_VERSION=\"$(jq .version package.json)\" --env USER_SCRIPT_DESC=\"$(jq .description package.json)\" --env USER_SCRIPT_AUTHORS=\"$(jq --join-output '.authors | join(\", \")' package.json)\" -p -s dollar-basic userscript-header.js dist/header.js",
+    "build:merge": "cat dist/header.js dist/userscript.js > dist/webhallen.user.js",
+    "build:cleanup": "rm dist/header.js dist/userscript.js",
+    "lint": "npx eslint src/ && npx tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Schanihbg/webhallen-sum-userscript.git"
+  },
+  "authors": [
+    "Schanii",
+    "tsjost",
+    "Furiiku"
+  ],
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Schanihbg/webhallen-sum-userscript/issues"
+  },
+  "homepage": "https://github.com/Schanihbg/webhallen-sum-userscript#readme",
+  "devDependencies": {
+    "@sleavely/eslint-config": "^1.0.1",
+    "@types/node": "^20.10.7",
+    "@types/tampermonkey": "^5.0.2",
+    "envsub": "^4.1.0",
+    "esbuild": "^0.19.11",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.3"
+  }
+}

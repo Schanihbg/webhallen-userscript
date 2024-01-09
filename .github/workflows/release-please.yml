@@ -1,0 +1,47 @@
+# This workflow causes release-please to maintain a Release PR
+# which publishes to NPM once it has been merged.
+# See https://github.com/google-github-actions/release-please-action
+
+on:
+  push:
+    branches:
+      - main
+
+name: release-please
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          release-type: node
+
+      # The logic below handles the npm publication:
+      - uses: actions/checkout@v4
+        # these if statements ensure that a publication only occurs when
+        # a new release is created:
+        if: ${{ steps.release.outputs.release_created }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Install dependencies
+        run: npm ci
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Build user scripts
+        run:
+          npm run build
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Upload Release Artifact
+        run: gh release upload ${{ steps.release.outputs.tag_name }} ./dist/webhallen.user.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ steps.release.outputs.release_created }}
