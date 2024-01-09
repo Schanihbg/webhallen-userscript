@@ -2,6 +2,7 @@ import { type Achievement, type AchievementsResponse } from './apiTypes/achievem
 import { type MeResponse } from './apiTypes/me'
 import { type Order, type OrderResponse } from './apiTypes/order'
 import { type Drop, type SupplyDropResponse } from './apiTypes/supplyDrop'
+import { getCachedPromise } from './promiseCache'
 
 export const fetchAPI = async <ExpectedType = unknown> (
   uri: string,
@@ -33,7 +34,7 @@ export async function fetchMe (): Promise<MeResponse['user']> {
   return data.user
 }
 
-export const fetchOrders = async (whId: number): Promise<Order[]> => {
+const fetchOrdersFresh = async (whId: number): Promise<Order[]> => {
   let page = 1
   const orders = []
 
@@ -50,6 +51,15 @@ export const fetchOrders = async (whId: number): Promise<Order[]> => {
       console.warn(`Order ${o.id} is considered broken by the API. It will not be included in calculations.`)
     }
     return !o.error
+  })
+}
+
+export const fetchOrders = async (whId: number): Promise<Order[]> => {
+  return await getCachedPromise({
+    key: `${whId}-orders`,
+    fn: async () => {
+      return await fetchOrdersFresh(whId)
+    },
   })
 }
 
