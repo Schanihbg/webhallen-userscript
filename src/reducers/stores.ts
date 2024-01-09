@@ -6,7 +6,8 @@ export interface StoreSum {
 }
 export const getStoreStats = (orders: Order[]): Map<string, StoreSum> => {
   const storePurchases = orders.reduce<Record<string, number>>((stores, order) => {
-    const storeName = order.store?.name ?? 'N/A'
+    const storeName = order.store?.name
+    if (!storeName) return stores
     stores[storeName] = (stores[storeName] || 0) + 1
     return stores
   }, {})
