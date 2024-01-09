@@ -5,7 +5,7 @@
 // ==UserScript==
 // @name         Webhallen user stats
 // @namespace    Webhallen
-// @version      0.9
+// @version      0.10
 // @description  Generate a statistics button and present a wide variety of stats from the users account. Note: This is a proof of concept and could be highly unstable, use at your own risk!
 // @author       Schanii, tsjost, and Furiiku
 // @match        https://www.webhallen.com/se/member/*
@@ -311,23 +311,26 @@ GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");');
 
     function getStoreStats(orders) {
         const storePurchases = orders.reduce((stores, order) => {
-            const storeName = order.store?.name ?? 'N/A';
+            let storeName = order.store?.name;
+            if (storeName === undefined) {
+                storeName = order.shippingMethod.name;
+            }
             stores[storeName] = (stores[storeName] || 0) + 1;
             return stores;
         }, {});
 
-        const stores = new Map;
+        const stores = new Map();
         Object
-        .entries(storePurchases)
-        .sort((a, b) => b[1] - a[1])
-        .forEach(([store, purchases]) => { stores.set(store, purchases) });
+            .entries(storePurchases)
+            .sort((a, b) => b[1] - a[1])
+            .forEach(([store, purchases]) => { stores.set(store, purchases); });
 
         const values = Array.from(stores.values());
         const minValue = Math.min(...values);
         const maxValue = Math.max(...values);
 
         for (const [store, purchases] of stores) {
-            const normalizedValue = 0.1 + 0.9 * (purchases - minValue) / (maxValue - minValue);
+            const normalizedValue = 0.1 + 0.9 * ((purchases - minValue) / (maxValue - minValue));
             stores.set(store, { purchases, normalizedValue });
         }
 
@@ -703,7 +706,7 @@ GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");');
     function generateStoresChart(orders) {
         const div = document.createElement('div');
         div.setAttribute('id', 'stores-chart');
-        div.style.width = "100%";
+        div.style.width = '100%';
         div.style.maxWidth = '900px';
         div.style.margin = '0 auto';
         div.style.display = 'flex';
@@ -717,7 +720,7 @@ GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");');
         const theadtr = document.createElement('tr');
         const thStore = document.createElement('th');
         thStore.scope = 'col';
-        const thCount = document.createElement('th')
+        const thCount = document.createElement('th');
         thCount.scope = 'col';
 
         theadtr.appendChild(thStore);
@@ -726,9 +729,10 @@ GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");');
 
         const tbody = document.createElement('tbody');
         const ul = document.createElement('ul');
-        ul.className = "charts-css legend legend-square";
+        ul.className = 'charts-css legend legend-square';
 
         let prev = 0;
+        const legendArr = [];
         orders.forEach((value, store) => {
             console.log(`${store}: Purchases = ${value.purchases}, Normalized Value = ${value.normalizedValue}`);
             const tr = document.createElement('tr');
@@ -741,8 +745,8 @@ GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");');
             prev = value.normalizedValue;
 
             const span = document.createElement('span');
-            span.className = "data";
-            span.textContent = value.purchases
+            span.className = 'data';
+            span.textContent = value.purchases;
 
             td.appendChild(span);
 
@@ -750,10 +754,14 @@ GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");');
             tr.appendChild(td);
             tbody.appendChild(tr);
 
+            legendArr.push(`${store}: ${value.purchases}`);
+        });
+
+        legendArr.reverse().forEach((element) => {
             const li = document.createElement('li');
-            li.textContent = `${store}: ${value.purchases}`;
+            li.textContent = element;
             ul.appendChild(li);
-        })
+        });
 
         table.appendChild(thead);
         table.appendChild(tbody);
