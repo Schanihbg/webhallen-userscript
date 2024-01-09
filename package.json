@@ -10,7 +10,7 @@
     "build:merge": "cat dist/header.js dist/userscript.js > dist/webhallen.user.js",
     "build:cleanup": "rm dist/header.js dist/userscript.js",
     "lint": "npx eslint src/ && npx tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run --silent"
   },
   "repository": {
     "type": "git",
