@@ -441,9 +441,9 @@ function generateStoresChart (storeSums: Map<string, StoreSum>): HTMLDivElement 
   const tbody = document.createElement('tbody')
   const ul = document.createElement('ul')
   ul.className = 'charts-css legend legend-square'
+  ul.setAttribute('style', 'flex-direction: column-reverse;')
 
   let prev = 0
-  const legendArr = [] as string[]
   storeSums.forEach((value, store) => {
     console.log(`${store}: Purchases = ${value.purchases}, Normalized Value = ${value.normalizedValue}`)
     const tr = document.createElement('tr')
@@ -465,12 +465,8 @@ function generateStoresChart (storeSums: Map<string, StoreSum>): HTMLDivElement 
     tr.appendChild(td)
     tbody.appendChild(tr)
 
-    legendArr.push(`${store}: ${value.purchases}`)
-  })
-
-  legendArr.reverse().forEach((legendString) => {
     const li = document.createElement('li')
-    li.textContent = legendString
+    li.textContent = `${store}: ${value.purchases}`
     ul.appendChild(li)
   })
 
