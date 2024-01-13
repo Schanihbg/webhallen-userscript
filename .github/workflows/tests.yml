@@ -20,6 +20,12 @@ jobs:
         node-version: '20'
         cache: 'npm'
     - run: npm ci
-    - run: npm run build --if-present
     - run: npm run lint
     - run: npm run test
+    - run: npm run build
+    - name: Archive distributable
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-folder
+        path: |
+          dist
