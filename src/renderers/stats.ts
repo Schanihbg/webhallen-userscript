@@ -481,6 +481,8 @@ function generateStoresChart (storeSums: Map<string, StoreSum>): HTMLDivElement 
 
 async function _clearAndAddStatistics (event: MouseEvent): Promise<void> {
   event.preventDefault()
+  GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");')
+
   const clickedLink = event.target as HTMLElement
 
   const allLinks = document.querySelectorAll('.router-link-exact-active.router-link-active')

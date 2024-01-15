@@ -3,8 +3,6 @@ import { setCachedUser } from './lib/userIdCache'
 import { renderComparisonUtility } from './renderers/comparison'
 import { addStatisticsLink } from './renderers/stats'
 
-GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");')
-
 const doRouting = async (): Promise<void> => {
   const { pathname } = document.location
   if (pathname.startsWith('/se/member')) {
