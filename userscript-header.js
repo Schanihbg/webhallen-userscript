@@ -9,5 +9,7 @@
 // @updateURL    https://github.com/Schanihbg/webhallen-sum-userscript/releases/latest/download/webhallen.user.js
 // @downloadURL  https://github.com/Schanihbg/webhallen-sum-userscript/releases/latest/download/webhallen.user.js
 // @grant        GM_addStyle
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @grant        window.onurlchange
 // ==/UserScript==
