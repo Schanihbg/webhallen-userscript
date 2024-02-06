@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/Schanihbg/webhallen-userscript/compare/v1.0.0...v1.0.1) (2024-02-06)
+
+
+### Bug Fixes
+
+* update [@update](https://github.com/update)Url ([96780fb](https://github.com/Schanihbg/webhallen-userscript/commit/96780fb3def742ef10bf7c61cb5a5c9948d08d20))
+
 ## 1.0.0 (2024-02-06)
 
 
