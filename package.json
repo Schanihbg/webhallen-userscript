@@ -1,5 +1,5 @@
 {
-  "name": "webhallen-sum-userscript",
+  "name": "webhallen-userscript",
   "version": "1.0.0",
   "description": "Adds a statistics page in the user profile section and adds product comparison functionality on applicable products",
   "main": "dist/webhallen.user.js",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Schanihbg/webhallen-sum-userscript.git"
+    "url": "git+https://github.com/Schanihbg/webhallen-userscript.git"
   },
   "authors": [
     "Schanii",
@@ -23,9 +23,9 @@
   ],
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/Schanihbg/webhallen-sum-userscript/issues"
+    "url": "https://github.com/Schanihbg/webhallen-userscript/issues"
   },
-  "homepage": "https://github.com/Schanihbg/webhallen-sum-userscript#readme",
+  "homepage": "https://github.com/Schanihbg/webhallen-userscript#readme",
   "devDependencies": {
     "@sleavely/eslint-config": "^1.0.1",
     "@types/node": "^20.10.7",
