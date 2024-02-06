@@ -1,6 +1,6 @@
 {
   "name": "webhallen-sum-userscript",
-  "version": "0.0.9",
+  "version": "1.0.0",
   "description": "Adds a statistics page in the user profile section and adds product comparison functionality on applicable products",
   "main": "dist/webhallen.user.js",
   "scripts": {
