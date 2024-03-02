@@ -30,8 +30,13 @@ export const fetchAPI = async <ExpectedType = unknown> (
 }
 
 export async function fetchMe (): Promise<MeResponse['user']> {
-  const data = await fetchAPI<MeResponse>('https://www.webhallen.com/api/me')
-  return data.user
+  return await getCachedPromise({
+    key: 'me',
+    fn: async () => {
+      const data = await fetchAPI<MeResponse>('https://www.webhallen.com/api/me')
+      return data.user
+    },
+  })
 }
 
 const fetchOrdersFresh = async (whId: number): Promise<Order[]> => {
