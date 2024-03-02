@@ -1,4 +1,5 @@
 import { fetchAchievements, fetchOrders, fetchSupplyDrops } from '../lib/api'
+import { addCss } from '../lib/css'
 import { getCachedUser } from '../lib/userIdCache'
 import { findCategoriesByPeriod } from '../reducers/categories'
 import { type ExperienceStats, getExperienceStats } from '../reducers/experience'
@@ -6,6 +7,7 @@ import { type HoarderEntry, findTopHoarderCheevoStats } from '../reducers/hoarde
 import { findOrdersPerMonth } from '../reducers/orders'
 import { getStoreStats, type StoreSum } from '../reducers/stores'
 import { type Streaks, findStreaks } from '../reducers/streaks'
+import chartsCss from 'charts.css'
 
 function addDataToDiv (headerText: string, domObject: Element): HTMLDivElement {
   const div = document.createElement('div')
@@ -479,9 +481,14 @@ function generateStoresChart (storeSums: Map<string, StoreSum>): HTMLDivElement 
   return div
 }
 
+let addedChartsCss = false
 async function _clearAndAddStatistics (event: MouseEvent): Promise<void> {
   event.preventDefault()
-  GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");')
+
+  if (!addedChartsCss) {
+    addCss(chartsCss)
+    addedChartsCss = true
+  }
 
   const clickedLink = event.target as HTMLElement
 
