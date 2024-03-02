@@ -481,14 +481,10 @@ function generateStoresChart (storeSums: Map<string, StoreSum>): HTMLDivElement 
   return div
 }
 
-let addedChartsCss = false
 async function _clearAndAddStatistics (event: MouseEvent): Promise<void> {
   event.preventDefault()
 
-  if (!addedChartsCss) {
-    addCss(chartsCss)
-    addedChartsCss = true
-  }
+  addCss(chartsCss)
 
   const clickedLink = event.target as HTMLElement
 
