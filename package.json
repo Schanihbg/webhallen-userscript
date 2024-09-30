@@ -5,7 +5,7 @@
   "main": "dist/webhallen.user.js",
   "scripts": {
     "build": "npm run build:compile && npm run build:header && npm run build:merge && npm run build:cleanup",
-    "build:compile": "npx esbuild --bundle src/userscript.ts --outdir=dist",
+    "build:compile": "npx esbuild --bundle src/userscript.ts --outdir=dist --loader:.css=text",
     "build:header": "npx envsub --env USER_SCRIPT_VERSION=\"$(jq .version package.json)\" --env USER_SCRIPT_DESC=\"$(jq .description package.json)\" --env USER_SCRIPT_AUTHORS=\"$(jq --join-output '.authors | join(\", \")' package.json)\" -p -s dollar-basic userscript-header.js dist/header.js",
     "build:merge": "cat dist/header.js dist/userscript.js > dist/webhallen.user.js",
     "build:cleanup": "rm dist/header.js dist/userscript.js",
@@ -35,5 +35,8 @@
     "esbuild": "^0.19.11",
     "typescript": "^5.3.3",
     "vitest": "^1.1.3"
+  },
+  "dependencies": {
+    "charts.css": "^1.1.0"
   }
 }
