@@ -35,7 +35,7 @@ function observeDOM (): void {
               link.addEventListener('click', (event) => { _clearAllStores(event).catch(() => { }) })
               const span2 = document.createElement('span')
               span2.className = 'store-location'
-              span2.textContent = 'Löser problem me butiker som inte går att ta bort då de försvunnit'
+              span2.textContent = 'Löser problem med butiker som inte går att ta bort då de försvunnit'
               link.appendChild(span1)
               link.appendChild(span2)
               li.appendChild(label)

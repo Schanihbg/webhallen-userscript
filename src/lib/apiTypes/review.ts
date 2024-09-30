@@ -32,7 +32,7 @@ export interface Review {
 export interface ReviewUser {
   id: number
   username: string
-  isPublicProfule: boolean
+  isPublicProfile: boolean
   knighthood: number[]
   rankLevel: number
   avatar: Avatar
