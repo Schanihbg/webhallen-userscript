@@ -103,6 +103,8 @@ function generateReviewTable (reviewData: ProductReview[]): HTMLTableElement {
     const voteCell = document.createElement('td')
     const reviewCell = document.createElement('td')
 
+    productCell.style.whiteSpace = 'normal'
+    productCell.style.wordBreak = 'normal'
     const link = document.createElement('a')
     link.href = 'https://www.webhallen.com/' + review.product
     link.target = '_blank'
@@ -145,6 +147,8 @@ function generateReviewTable (reviewData: ProductReview[]): HTMLTableElement {
     votesDiv.appendChild(thumbDownSpan)
     voteCell.append(votesDiv)
 
+    reviewCell.style.whiteSpace = 'normal'
+    reviewCell.style.wordBreak = 'normal'
     reviewCell.colSpan = 4
     reviewCell.textContent = review.review.text
 
