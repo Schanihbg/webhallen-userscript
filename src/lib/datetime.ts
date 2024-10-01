@@ -19,3 +19,20 @@ export function timeAgo (unixTimestamp: number): string {
 
   return 'Just nu'
 }
+
+export function unixTimestampToLocale (unixTimestamp: number): string {
+  const date = new Date(unixTimestamp * 1000)
+  const locale = navigator.language || 'sv-SE'
+
+  const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      timeZoneName: 'short'
+  }
+
+  return new Intl.DateTimeFormat(locale, options).format(date)
+}

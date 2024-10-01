@@ -1,6 +1,6 @@
 import { fetchUserReviews, type ProductReview } from '../lib/api'
 import { getCachedUser } from '../lib/userIdCache'
-import { timeAgo } from '../lib/datetime'
+import { timeAgo, unixTimestampToLocale } from '../lib/datetime'
 import { getPostedReviews, getProductsWithoutReviews } from '../reducers/reviews'
 
 function injectCSS (): void {
@@ -114,7 +114,10 @@ function generateReviewTable (reviewData: ProductReview[]): HTMLTableElement {
     productCell.appendChild(link)
 
     timestampCell.style.textAlign = 'center'
-    timestampCell.textContent = timeAgo(review.review.createdAt)
+    const timestampSpan = document.createElement('span')
+    timestampSpan.title = unixTimestampToLocale(review.review.createdAt)
+    timestampSpan.textContent = timeAgo(review.review.createdAt)
+    timestampCell.appendChild(timestampSpan)
 
     scoreCell.style.textAlign = 'center'
     const starsDiv = document.createElement('div')
