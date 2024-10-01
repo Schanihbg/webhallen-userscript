@@ -1,12 +1,15 @@
 import { type Achievement, type AchievementsResponse } from './apiTypes/achievements'
 import { type MeResponse } from './apiTypes/me'
 import { type Order, type OrderResponse } from './apiTypes/order'
+import { type Review, type ReviewResponse } from './apiTypes/review'
+import { type DeleteStoreResponse } from './apiTypes/starred-store'
 import { type Drop, type SupplyDropResponse } from './apiTypes/supplyDrop'
 import { getCachedPromise } from './promiseCache'
 
 export const fetchAPI = async <ExpectedType = unknown> (
   uri: string,
   params?: Record<string, string | number>,
+  method: string = 'GET',
 ): Promise<ExpectedType> => {
   const url = new URL(uri)
   if (params) {
@@ -17,7 +20,10 @@ export const fetchAPI = async <ExpectedType = unknown> (
       })
   }
 
-  return await fetch(url.toString())
+  return await fetch(url.toString(), {
+    method,
+    signal: AbortSignal.timeout(10000),
+  })
     .then(async (response) => {
       // The API call was successful!
       return await response.json()
@@ -59,6 +65,70 @@ export const fetchOrders = async (whId: number): Promise<Order[]> => {
     key: `${whId}-orders`,
     fn: async () => {
       return await fetchOrdersFresh(whId)
+    },
+  })
+}
+
+function updateProgress (current: number, total: number): void {
+  const progressBar = document.getElementById('review-progress-bar') as HTMLElement
+  const progressText = document.getElementById('review-progress-text') as HTMLElement
+
+  if (progressBar && progressText) {
+    const percentage = (current / total) * 100
+    progressBar.style.width = `${percentage}%`
+    progressText.innerText = `${current} av ${total}`
+  } else {
+    console.error('Could not find progress bar!')
+  }
+}
+
+export interface ProductReview {
+  product: number
+  review: Review | undefined
+}
+export const fetchUserReviewsFresh = async (whId: number): Promise<ProductReview[]> => {
+  const handledProducts = [] as number[]
+  const userReviews = []
+  const orders = await fetchOrders(whId)
+  let current = 0
+  const total = orders.flatMap(order => order.rows).length
+
+  for (const order of orders) {
+    for (const item of order.rows) {
+      updateProgress(current++, total)
+      if (handledProducts.includes(item.product.id)) continue
+      handledProducts.push(item.product.id)
+
+      const id = item.product.id
+      const productReviews = await fetchProductReviews(id)
+      const userProductReview = productReviews.find(review => {
+        if (review.isAnonymous) return false
+
+        try {
+          return review.user.id === whId
+        } catch (error) {
+          console.error('Error accessing review:', review, error)
+          return false
+        }
+      })
+      if (userProductReview) {
+        console.log('Found a review')
+      }
+      userReviews.push({
+        product: id,
+        review: userProductReview,
+      })
+    }
+  }
+
+  return userReviews
+}
+
+export const fetchUserReviews = async (whId: number): Promise<ProductReview[]> => {
+  return await getCachedPromise({
+    key: `${whId}-reviews`,
+    fn: async () => {
+      return await fetchUserReviewsFresh(whId)
     },
   })
 }
@@ -114,4 +184,27 @@ export async function fetchProductData (productId: string | number): Promise<Pro
     console.error(error)
     return null
   }
+}
+
+export async function fetchProductReviews (productId: string | number): Promise<Review[]> {
+  let page = 1
+  const reviews = []
+
+  while (true) {
+    const params = { page }
+    const data = await fetchAPI<ReviewResponse>(`https://www.webhallen.com/api/reviews?products[0]=${productId}&sortby=latest`, params)
+    if (data.reviews.length === 0) break
+    reviews.push(...data.reviews)
+    page++
+  }
+
+  return reviews
+}
+
+export async function deleteFavoriteStores (): Promise<null> {
+  for (let i = 0; i <= 40; i++) {
+    console.log(`Tar bort butik ${i} från favoriter.`)
+    await fetchAPI<DeleteStoreResponse>(`https://www.webhallen.com/api/starred-store/${i}`, {}, 'DELETE')
+  }
+  return null
 }
