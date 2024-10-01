@@ -1,5 +1,7 @@
-import { fetchUserReviews, type OrderReview } from '../lib/api'
+import { fetchUserReviews, type ProductReview } from '../lib/api'
 import { getCachedUser } from '../lib/userIdCache'
+import { timeAgo } from '../lib/datetime'
+import { getPostedReviews, getProductsWithoutReviews } from '../reducers/reviews'
 
 function injectCSS (): void {
   const style = document.createElement('style')
@@ -84,55 +86,108 @@ function addDataToDiv (headerText: string, domObject: Element): HTMLDivElement {
   return div
 }
 
-function generateReviewTable (reviewData: OrderReview[]): HTMLTableElement {
+function generateReviewTable (reviewData: ProductReview[]): HTMLTableElement {
   const table = document.createElement('table')
   table.className = 'table table-condensed table-striped tech-specs-table'
 
-  const thead = document.createElement('thead')
-  const headerRow = document.createElement('tr')
-  const headers = ['Artikel id', 'Omdöme', 'Betyg']
-
-  headers.forEach(function (header) {
-    const th = document.createElement('th')
-    th.textContent = header
-    headerRow.appendChild(th)
-  })
-
-  thead.appendChild(headerRow)
-  table.appendChild(thead)
-
-  const tbody = document.createElement('tbody')
-
   for (const review of reviewData) {
-    const row = document.createElement('tr')
-    const cell1 = document.createElement('td')
-    const cell2 = document.createElement('td')
-    const cell3 = document.createElement('td')
+    if (!review.review) continue
+
+    const tbody = document.createElement('tbody')
+
+    const row1 = document.createElement('tr')
+    const row2 = document.createElement('tr')
+    const productCell = document.createElement('td')
+    const timestampCell = document.createElement('td')
+    const scoreCell = document.createElement('td')
+    const voteCell = document.createElement('td')
+    const reviewCell = document.createElement('td')
 
     const link = document.createElement('a')
     link.href = 'https://www.webhallen.com/' + review.product
     link.target = '_blank'
     link.rel = 'noopener noreferrer'
-    const linkText = document.createTextNode('[' + review.product + ']')
-
-    if (!review.review) {
-      cell2.textContent = 'Denna produkt saknar recenssion'
-    } else {
-      cell2.textContent = review.review.text.toString()
-      cell3.textContent = review.review.rating.toString()
-      linkText.textContent = `${linkText.textContent} ${review.review.product.name}`
-    }
+    const linkText = document.createTextNode(`${review.product} ${review.review.product.name}`)
     link.appendChild(linkText)
-    cell1.appendChild(link)
+    productCell.appendChild(link)
 
-    row.appendChild(cell1)
-    row.appendChild(cell2)
-    row.appendChild(cell3)
+    timestampCell.style.textAlign = 'center'
+    timestampCell.textContent = timeAgo(review.review.createdAt)
 
+    scoreCell.style.textAlign = 'center'
+    const starsDiv = document.createElement('div')
+    starsDiv.className = 'stars'
+    starsDiv.title = `${review.review.rating} / 5`
+    starsDiv.style.textAlign = 'middle'
+    const starsContentDiv = document.createElement('div')
+    starsContentDiv.className = 'stars-content stars-content-bg'
+    starsContentDiv.style.width = `${(review.review.rating / 5) * 100}%`
+    starsDiv.appendChild(starsContentDiv)
+    scoreCell.appendChild(starsDiv)
+
+    voteCell.style.textAlign = 'right'
+    const votesDiv = document.createElement('div')
+    votesDiv.className = 'votes'
+    const thumbUpSpan = document.createElement('span')
+    thumbUpSpan.title = 'Tumme upp'
+    thumbUpSpan.className = 'vote vote-up secondary'
+    thumbUpSpan.style.cursor = 'auto'
+    thumbUpSpan.style.userSelect = 'auto'
+    thumbUpSpan.textContent = review.review.upvotes.toString()
+
+    const thumbDownSpan = document.createElement('span')
+    thumbDownSpan.title = 'Tumme ner'
+    thumbDownSpan.className = 'vote vote-down secondary'
+    thumbDownSpan.style.cursor = 'auto'
+    thumbDownSpan.style.userSelect = 'auto'
+    thumbDownSpan.textContent = review.review.downvotes.toString()
+    votesDiv.appendChild(thumbUpSpan)
+    votesDiv.appendChild(thumbDownSpan)
+    voteCell.append(votesDiv)
+
+    reviewCell.colSpan = 4
+    reviewCell.textContent = review.review.text
+
+    row1.appendChild(productCell)
+    row1.appendChild(timestampCell)
+    row1.appendChild(scoreCell)
+    row1.appendChild(voteCell)
+
+    row2.appendChild(reviewCell)
+
+    tbody.appendChild(row1)
+    tbody.appendChild(row2)
+
+    table.appendChild(tbody)
+  }
+
+  return table
+}
+
+function generateMissingReviewTable (reviewData: ProductReview[]): HTMLTableElement {
+  const table = document.createElement('table')
+  table.className = 'table table-condensed table-striped tech-specs-table'
+
+  const tbody = document.createElement('tbody')
+
+  for (const review of reviewData) {
+    const row = document.createElement('tr')
+    const productCell = document.createElement('td')
+
+    const link = document.createElement('a')
+    link.href = 'https://www.webhallen.com/' + review.product
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    const linkText = document.createTextNode(`${review.product}`)
+    link.appendChild(linkText)
+    productCell.appendChild(link)
+
+    row.appendChild(productCell)
     tbody.appendChild(row)
   }
 
   table.appendChild(tbody)
+
   return table
 }
 
@@ -198,12 +253,18 @@ async function _clearAndAddReviews (event: MouseEvent): Promise<void> {
   injectPath.appendChild(progressContainer)
   injectPath.appendChild(svg)
 
-  const userReviews = await fetchUserReviews(getCachedUser().id)
+  const productReviews = await fetchUserReviews(getCachedUser().id)
+  const userReviews = getPostedReviews(productReviews)
+  const missingReviews = getProductsWithoutReviews(productReviews)
 
   injectPath.innerHTML = content
 
-  if (userReviews) {
+  if (userReviews && userReviews.length > 0) {
     injectPath.appendChild(addDataToDiv('Recensioner', generateReviewTable(userReviews)))
+  }
+
+  if (missingReviews && missingReviews.length > 0) {
+    injectPath.appendChild(addDataToDiv('Produkter du köpt som saknar recension', generateMissingReviewTable(missingReviews)))
   }
 }
 

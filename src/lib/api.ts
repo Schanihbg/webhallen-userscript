@@ -82,11 +82,11 @@ function updateProgress (current: number, total: number): void {
   }
 }
 
-export interface OrderReview {
+export interface ProductReview {
   product: number
   review: Review | undefined
 }
-export const fetchUserReviewsFresh = async (whId: number): Promise<OrderReview[]> => {
+export const fetchUserReviewsFresh = async (whId: number): Promise<ProductReview[]> => {
   const handledProducts = [] as number[]
   const userReviews = []
   const orders = await fetchOrders(whId)
@@ -113,8 +113,6 @@ export const fetchUserReviewsFresh = async (whId: number): Promise<OrderReview[]
       })
       if (userProductReview) {
         console.log('Found a review')
-      } else {
-        console.log('Found no reviews')
       }
       userReviews.push({
         product: id,
@@ -126,7 +124,7 @@ export const fetchUserReviewsFresh = async (whId: number): Promise<OrderReview[]
   return userReviews
 }
 
-export const fetchUserReviews = async (whId: number): Promise<OrderReview[]> => {
+export const fetchUserReviews = async (whId: number): Promise<ProductReview[]> => {
   return await getCachedPromise({
     key: `${whId}-reviews`,
     fn: async () => {
