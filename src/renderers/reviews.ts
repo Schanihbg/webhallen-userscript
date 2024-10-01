@@ -151,6 +151,36 @@ function generateMissingReviewTable (reviewData: ProductReview[]): HTMLTableElem
   return table
 }
 
+function _clearAndShowReviewButton (event: MouseEvent) {
+  event.preventDefault()
+
+  const paths = ['section',
+    'div.member-subpage',
+    'div.container']
+  const injectPath = findInjectPath(paths)
+  if (!injectPath) return
+
+  const content = `
+  <h2 class="level-one-heading mb-5">Mina recensioner</h2><hr>
+  <div class="mb-5">
+  <span>Innan du trycker på hämta recensioner nedan är det viktig att du förstår att detta kommer hämta samtliga produkter från alla dina hanterade ordrar och sedan hämta alla recensioner för dessa produkter. Detta kommer generera en hel del trafik mot Webhallen från din webbläsare beroende på hur många ordrar och produkter du har i din historik. Om du hämtar denna information för ofta kan det hända att ditt konto eller IP address blir temporärt eller i värsta fall permanent blockerad från att besöka Webhallen.</span>
+  <br/><br/>
+  <span style="color: #d50855; font-size: 15px; font-weight:bold;">Genom att trycka på "Hämta recensioner" nedan godkänner du att du läst ovan och förstår innebörden av det samt att utvecklarna av detta userscript inte tar något ansvar för eventuella händelser!</span></div>
+  `
+
+  injectPath.innerHTML = content
+
+  const reviewsButton = document.createElement('button')
+  reviewsButton.type = 'button'
+  reviewsButton.className = 'review-section-button text-btn'
+  const reviewsButtonText = document.createElement('span')
+  reviewsButtonText.textContent = 'Hämta recensioner'
+  reviewsButtonText.addEventListener('click', (event) => { _clearAndAddReviews(event).catch(() => { }) })
+  reviewsButton.appendChild(reviewsButtonText)
+
+  injectPath.appendChild(reviewsButton)
+}
+
 async function _clearAndAddReviews (event: MouseEvent): Promise<void> {
   event.preventDefault()
 
@@ -237,7 +267,7 @@ export function addReviewsLink (): void {
 
     link.appendChild(image)
     link.appendChild(document.createTextNode('Recensioner'))
-    link.addEventListener('click', (event) => { _clearAndAddReviews(event).catch(() => { }) })
+    link.addEventListener('click', (event) => { _clearAndShowReviewButton(event) })
     li.appendChild(link)
     ul.appendChild(li)
   } else {
