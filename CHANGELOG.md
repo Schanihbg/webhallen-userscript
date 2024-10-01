@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.0](https://github.com/Schanihbg/webhallen-userscript/compare/v1.0.1...v1.1.0) (2024-10-01)
+
+
+### Features
+
+* Add progress bar when processing reviews ([ee2eb5e](https://github.com/Schanihbg/webhallen-userscript/commit/ee2eb5e6e0db776d27d38c4d99fe8cc1998e981c))
+* Clear all favorite stores ([ee2eb5e](https://github.com/Schanihbg/webhallen-userscript/commit/ee2eb5e6e0db776d27d38c4d99fe8cc1998e981c))
+* Show user reviews (off by default) ([ee2eb5e](https://github.com/Schanihbg/webhallen-userscript/commit/ee2eb5e6e0db776d27d38c4d99fe8cc1998e981c))
+
+
+### Bug Fixes
+
+* Add 10 second timeout on all api requests ([ee2eb5e](https://github.com/Schanihbg/webhallen-userscript/commit/ee2eb5e6e0db776d27d38c4d99fe8cc1998e981c))
+* Add warning label to setting toggles ([ee2eb5e](https://github.com/Schanihbg/webhallen-userscript/commit/ee2eb5e6e0db776d27d38c4d99fe8cc1998e981c))
+* incorrect word wrap on reviews ([c84f48e](https://github.com/Schanihbg/webhallen-userscript/commit/c84f48ec304a69d4b1613be363f7d61b26f89450))
+* make sort more readable ([fe66f63](https://github.com/Schanihbg/webhallen-userscript/commit/fe66f63e94c5107c1cdc4d387b7806c1d641319d))
+* refactor inject and table building functions ([be9fa50](https://github.com/Schanihbg/webhallen-userscript/commit/be9fa501f0ca0af1999317f9c4fbf1eb74afde47))
+* seperate actual reviews from missing reviews ([24d3c42](https://github.com/Schanihbg/webhallen-userscript/commit/24d3c4249038547f4d558a5996d0bd3dd0fe588e))
+* show time in locale when hovering over review time ([54a297e](https://github.com/Schanihbg/webhallen-userscript/commit/54a297e216aaff3de478a512852d4347b7428296))
+* sort reviews in descending order ([363a6fa](https://github.com/Schanihbg/webhallen-userscript/commit/363a6fa51d4fb92818a0b02e3a783b3261d2ad1e))
+* typos ([627480c](https://github.com/Schanihbg/webhallen-userscript/commit/627480c54252b2282ec80556efff427942625e7b))
+* warning page and button before getting user reviews ([113a6ca](https://github.com/Schanihbg/webhallen-userscript/commit/113a6ca75dd5526e091199d22fb306ed6a951c6c))
+
 ## [1.0.1](https://github.com/Schanihbg/webhallen-userscript/compare/v1.0.0...v1.0.1) (2024-02-06)
 
 
