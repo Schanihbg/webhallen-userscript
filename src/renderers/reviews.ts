@@ -2,6 +2,7 @@ import { fetchUserReviews, type ProductReview } from '../lib/api'
 import { getCachedUser } from '../lib/userIdCache'
 import { timeAgo, unixTimestampToLocale } from '../lib/datetime'
 import { getPostedReviews, getProductsWithoutReviews } from '../reducers/reviews'
+import { addDataToDiv, findInjectPath } from '../lib/builders'
 
 function injectCSS (): void {
   const style = document.createElement('style')
@@ -36,54 +37,6 @@ function injectCSS (): void {
 
   // Append the style element to the head
   document.head.appendChild(style)
-}
-
-function addDataToDiv (headerText: string, domObject: Element): HTMLDivElement {
-  const div = document.createElement('div')
-  div.className = 'order my-4'
-
-  const table = document.createElement('table')
-  table.className = 'table table-condensed'
-
-  const tbody = document.createElement('tbody')
-
-  const tr = document.createElement('tr')
-  tr.className = 'order-id-wrap'
-
-  const td = document.createElement('td')
-  td.textContent = headerText
-
-  tr.appendChild(td)
-  tbody.appendChild(tr)
-  table.appendChild(tbody)
-  div.appendChild(table)
-
-  const div1 = document.createElement('div')
-  const div2 = document.createElement('div')
-  const orderProgression = document.createElement('div')
-  const innerContainer = document.createElement('div')
-  const orderStatusEvent = document.createElement('div')
-  const icon = document.createElement('div')
-  const header = document.createElement('h3')
-  const secondary = document.createElement('div')
-
-  div1.appendChild(div2)
-  div2.appendChild(orderProgression)
-  orderProgression.appendChild(innerContainer)
-  innerContainer.appendChild(orderStatusEvent)
-  orderStatusEvent.appendChild(icon)
-  orderStatusEvent.appendChild(header)
-  orderStatusEvent.appendChild(secondary)
-  secondary.appendChild(domObject)
-
-  header.className = 'level-two-heading'
-  icon.className = 'icon'
-
-  header.textContent = ''
-
-  div.appendChild(div1)
-
-  return div
 }
 
 function generateReviewTable (reviewData: ProductReview[]): HTMLTableElement {
@@ -198,18 +151,6 @@ function generateMissingReviewTable (reviewData: ProductReview[]): HTMLTableElem
   return table
 }
 
-function findInjectPath (paths: string[]): HTMLElement | null {
-  let dom = null
-  paths.forEach(path => {
-    const d = document.querySelector(path)
-    if (d) {
-      dom = d
-    }
-  })
-
-  return dom
-}
-
 async function _clearAndAddReviews (event: MouseEvent): Promise<void> {
   event.preventDefault()
 
@@ -268,6 +209,8 @@ async function _clearAndAddReviews (event: MouseEvent): Promise<void> {
 
   if (userReviews && userReviews.length > 0) {
     injectPath.appendChild(addDataToDiv('Recensioner', generateReviewTable(userReviews)))
+  } else {
+    console.log('Hittade inga recensioner')
   }
 
   if (missingReviews && missingReviews.length > 0) {
