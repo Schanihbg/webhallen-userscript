@@ -151,7 +151,7 @@ function generateMissingReviewTable (reviewData: ProductReview[]): HTMLTableElem
   return table
 }
 
-function _clearAndShowReviewButton (event: MouseEvent) {
+function _clearAndShowReviewButton (event: MouseEvent): void {
   event.preventDefault()
 
   const paths = ['section',
