@@ -34,6 +34,6 @@
     "envsub": "^4.1.0",
     "esbuild": "^0.19.11",
     "typescript": "^5.3.3",
-    "vitest": "^1.1.3"
+    "vitest": "^1.6.1"
   }
 }
