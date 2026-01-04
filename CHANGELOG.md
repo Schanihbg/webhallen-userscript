@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Schanihbg/webhallen-userscript/compare/v1.1.0...v1.1.1) (2026-01-04)
+
+
+### Bug Fixes
+
+* Increase timeout limit from 10 seconds to 30 seconds ([f5dd3b3](https://github.com/Schanihbg/webhallen-userscript/commit/f5dd3b39912fe9a65eaf45141eb50851e194a36e))
+
 ## [1.1.0](https://github.com/Schanihbg/webhallen-userscript/compare/v1.0.1...v1.1.0) (2024-10-01)
 
 
