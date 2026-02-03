@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/Schanihbg/webhallen-userscript/compare/v1.1.1...v1.1.2) (2026-02-03)
+
+
+### Bug Fixes
+
+* remove cdn from script ([181404a](https://github.com/Schanihbg/webhallen-userscript/commit/181404aefab4584e41ec83f8428bd53096d00581))
+
 ## [1.1.1](https://github.com/Schanihbg/webhallen-userscript/compare/v1.1.0...v1.1.1) (2026-01-04)
 
 
