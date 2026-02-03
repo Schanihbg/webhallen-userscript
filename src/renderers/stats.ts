@@ -449,7 +449,7 @@ async function _clearAndAddStatistics (event: MouseEvent): Promise<void> {
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   const image = document.createElementNS('http://www.w3.org/2000/svg', 'image')
-  image.setAttribute('href', 'https://cdn.webhallen.com/img/loading_light.svg')
+  image.setAttribute('href', 'https://www.webhallen.com/img/loading_light.svg')
   svg.appendChild(image)
 
   injectPath.appendChild(svg)
@@ -506,7 +506,7 @@ export function addStatisticsLink (): void {
     link.href = '#'
 
     const image = document.createElement('img')
-    image.src = '//cdn.webhallen.com/img/icons/member/topplistor.svg'
+    image.src = '//www.webhallen.com/img/icons/member/topplistor.svg'
     image.className = 'member-icon'
     image.alt = 'Statistik'
 

@@ -210,7 +210,7 @@ async function _clearAndAddReviews (event: MouseEvent): Promise<void> {
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   const image = document.createElementNS('http://www.w3.org/2000/svg', 'image')
-  image.setAttribute('href', 'https://cdn.webhallen.com/img/loading_light.svg')
+  image.setAttribute('href', 'https://www.webhallen.com/img/loading_light.svg')
   svg.appendChild(image)
 
   const progressContainer = document.createElement('div')
@@ -261,7 +261,7 @@ export function addReviewsLink (): void {
     link.href = '#'
 
     const image = document.createElement('img')
-    image.src = '//cdn.webhallen.com/img/icons/feed/feed_review.svg'
+    image.src = '//www.webhallen.com/img/icons/feed/feed_review.svg'
     image.className = 'member-icon'
     image.alt = 'Recensioner'
 

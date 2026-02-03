@@ -1,6 +1,6 @@
 import { type ProductData, fetchProductData } from '../lib/api'
 
-const URI_CDN = '//cdn.webhallen.com'
+const URI = '//www.webhallen.com'
 
 type InnerHTMLString = string
 
@@ -13,11 +13,11 @@ function generateComparisonTable (products: ProductData[]): InnerHTMLString {
             <tr>
                 <th class="attribute"></th>
                 <th>
-                    <img src='${URI_CDN}${products[0].thumbnail}' alt='${products[0].name}'>
+                    <img src='${URI}${products[0].thumbnail}' alt='${products[0].name}'>
                     <p>${products[0].name} (${products[0].id})</p>
                 </th>
                 <th>
-                    <img src='${URI_CDN}${products[1].thumbnail}' alt='${products[1].name}'>
+                    <img src='${URI}${products[1].thumbnail}' alt='${products[1].name}'>
                     <p>${products[1].name} (${products[1].id})</p>
                 </th>
             </tr>
@@ -127,7 +127,7 @@ function createOverlay (content: HTMLElement): HTMLDivElement {
 
   const closeImage = document.createElement('img')
   closeImage.className = 'icon'
-  closeImage.src = '//cdn.webhallen.com/api/dynimg/icon/esc/FFFFFF'
+  closeImage.src = '//www.webhallen.com/api/dynimg/icon/esc/FFFFFF'
   closeImage.alt = 'Stäng ner'
 
   const closeButton = document.createElement('button')
