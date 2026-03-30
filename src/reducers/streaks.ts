@@ -89,8 +89,6 @@ export const findStreaks = (orders: Order[], minimumSum = 500): Streaks => {
           output.currentStreak = 0
           currentStreakStart = yearMonth
         }
-        lastYearMonth = yearMonth
-        previousDate = currentDate
       } else {
         if (output.currentStreak > 0) {
           output.streaks.push({ start: currentStreakStart, end: lastYearMonth, months: output.currentStreak })

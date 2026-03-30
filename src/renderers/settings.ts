@@ -66,7 +66,7 @@ const renderSettingCheckbox = (settingKey: string, labelText: string, warningTex
   }
 
   renderState(getSetting(settingKey))
-  label.addEventListener('input', (e) => {
+  label.addEventListener('input', () => {
     const newValue = !getSetting(settingKey)
 
     // update it in storage
