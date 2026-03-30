@@ -48,6 +48,7 @@ const doRouting = async (): Promise<void> => {
 const voidRouting = (): void => {
   doRouting().catch(() => {})
 }
+// @ts-expect-error: Property 'onurlchange' does not exist on type
 if (window.onurlchange === null) {
   window.addEventListener('urlchange', voidRouting)
 }
