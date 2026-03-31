@@ -1,6 +1,3 @@
-/* eslint-disable no-multi-spaces */
-/* eslint-disable @typescript-eslint/key-spacing */
-
 export interface SupplyDropResponse {
   airplanePosition: number
   nextDropTime:     number

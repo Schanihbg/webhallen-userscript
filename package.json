@@ -28,12 +28,18 @@
   },
   "homepage": "https://github.com/Schanihbg/webhallen-userscript#readme",
   "devDependencies": {
-    "@sleavely/eslint-config": "^1.0.1",
-    "@types/node": "^20.10.7",
-    "@types/tampermonkey": "^5.0.2",
-    "envsub": "^4.1.0",
-    "esbuild": "^0.19.11",
-    "typescript": "^5.3.3",
-    "vitest": "^1.6.1"
+    "@eslint/eslintrc": "3.3.5",
+    "@eslint/js": "10.0.1",
+    "@stylistic/eslint-plugin": "5.10.0",
+    "@types/node": "25.5.0",
+    "@types/tampermonkey": "5.0.5",
+    "envsub": "4.1.0",
+    "esbuild": "0.27.4",
+    "eslint": "10.1.0",
+    "globals": "17.4.0",
+    "jiti": "2.6.1",
+    "typescript": "6.0.2",
+    "typescript-eslint": "8.58.0",
+    "vitest": "4.1.2"
   }
 }

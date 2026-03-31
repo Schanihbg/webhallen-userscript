@@ -8,7 +8,7 @@ interface GroupedData {
 }
 function getOrderDatesPerMonthWithSum (orders: Order[]): GroupedData[] {
   const groupedData = Object.entries(
-    orders.reduce<Record<string, { totalOrders: number, totalSum: number }>>((acc, { orderDate, sentDate, totalSum }) => {
+    orders.reduce<Record<string, { totalOrders: number, totalSum: number }>>((acc, { orderDate, totalSum }) => {
       const dateOrdered = new Date(orderDate * 1000)
       const orderedYear = dateOrdered.getUTCFullYear()
       const orderedMonth = dateOrdered.getUTCMonth()

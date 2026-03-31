@@ -423,6 +423,7 @@ function generateStoresChart (storeSums: Map<string, StoreSum>): HTMLDivElement 
 
 async function _clearAndAddStatistics (event: MouseEvent): Promise<void> {
   event.preventDefault()
+// @ts-expect-error: Cannot find name 'GM_addStyle'.
   GM_addStyle('@import url("https://unpkg.com/charts.css/dist/charts.min.css");')
 
   const clickedLink = event.target as HTMLElement

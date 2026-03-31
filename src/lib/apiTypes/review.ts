@@ -1,6 +1,3 @@
-/* eslint-disable no-multi-spaces */
-/* eslint-disable @typescript-eslint/key-spacing */
-
 import { type Avatar } from './me'
 import { type Product } from './order'
 

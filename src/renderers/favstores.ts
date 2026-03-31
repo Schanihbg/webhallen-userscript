@@ -11,7 +11,7 @@ function observeDOM (): void {
 
   const config = { childList: true, subtree: true }
 
-  const callback = function (mutationsList: MutationRecord[], observer: MutationObserver): void {
+  const callback = function (mutationsList: MutationRecord[]): void {
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
         mutation.addedNodes.forEach((node) => {

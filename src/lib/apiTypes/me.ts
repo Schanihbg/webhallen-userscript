@@ -1,6 +1,3 @@
-/* eslint-disable no-multi-spaces */
-/* eslint-disable @typescript-eslint/key-spacing */
-
 export interface MeResponse {
   user:          User
   starredStores: number[]

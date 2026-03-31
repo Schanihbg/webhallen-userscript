@@ -5,10 +5,12 @@ export const getSetting = (key: string): boolean => {
     showStoreFix: true,
     showReviews: false,
   } as Record<string, boolean>
+  // @ts-expect-error: Cannot find name
   return GM_getValue(key, defaults[key] || false)
 }
 
 const setSetting = (key: string, value: boolean): void => {
+  // @ts-expect-error: Cannot find name
   GM_setValue(key, value)
 }
 
@@ -66,7 +68,7 @@ const renderSettingCheckbox = (settingKey: string, labelText: string, warningTex
   }
 
   renderState(getSetting(settingKey))
-  label.addEventListener('input', (e) => {
+  label.addEventListener('input', () => {
     const newValue = !getSetting(settingKey)
 
     // update it in storage
