@@ -1,3 +1,7 @@
+import { ordersCacheKey, reviewsCacheKey } from '../lib/api'
+import { clearCache } from '../lib/persistentCache'
+import { getCachedUser } from '../lib/userIdCache'
+
 export const getSetting = (key: string): boolean => {
   const defaults = {
     showComparisons: true,
@@ -12,6 +16,38 @@ export const getSetting = (key: string): boolean => {
 const setSetting = (key: string, value: boolean): void => {
   // @ts-expect-error: Cannot find name
   GM_setValue(key, value)
+}
+
+const renderClearCacheButton = (): Element => {
+  const wrapper = document.createElement('div')
+  wrapper.style.marginTop = '1rem'
+
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.classList.add('btn', 'btn-default')
+  button.textContent = 'Rensa cache'
+
+  const status = document.createElement('span')
+  status.style.marginLeft = '1rem'
+  status.style.color = '#3c763d'
+  status.style.fontSize = '12px'
+
+  button.addEventListener('click', () => {
+    const user = getCachedUser()
+    if (!user) {
+      status.style.color = '#d50855'
+      status.textContent = 'Kunde inte hitta användare.'
+      return
+    }
+    clearCache(ordersCacheKey(user.id))
+    clearCache(reviewsCacheKey(user.id))
+    status.style.color = '#3c763d'
+    status.textContent = 'Cache rensad.'
+  })
+
+  wrapper.appendChild(button)
+  wrapper.appendChild(status)
+  return wrapper
 }
 
 const renderSettingCheckbox = (settingKey: string, labelText: string, warningText: string | undefined = undefined): Element => {
@@ -124,6 +160,7 @@ export const appendScriptSettings = (): void => {
     renderSettingCheckbox('showStats', 'Visa statistiksidan'),
     renderSettingCheckbox('showStoreFix', 'Visa rensa favoritbutik fix'),
     renderSettingCheckbox('showReviews', 'Visa recensioner', 'Recensioner är en trafikintensiv feature och kan påverka din upplevelse hos webhallen. Genom att aktivera detta godkänner du att du förstår innebörden av detta och att inte missbruka denna feature!'),
+    renderClearCacheButton(),
   ]
 
   const panelDiv = renderPanel('Userscript-inställningar', settingsContents)

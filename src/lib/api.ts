@@ -4,7 +4,15 @@ import { type Order, type OrderResponse } from './apiTypes/order'
 import { type Review, type ReviewResponse } from './apiTypes/review'
 import { type DeleteStoreResponse } from './apiTypes/starred-store'
 import { type Drop, type SupplyDropResponse } from './apiTypes/supplyDrop'
+import { readCache, writeCache, SEVEN_DAYS_MS } from './persistentCache'
 import { getCachedPromise } from './promiseCache'
+
+export const ordersCacheKey = (whId: number): string => `orders-v1-${whId}`
+export const reviewsCacheKey = (whId: number): string => `reviews-v1-${whId}`
+
+// Set by fetchOrdersCached on a cache-hit, read by fetchUserReviewsCached.
+// Lives only for the current page load, like promiseCache.
+const ordersServedFromCache = {} as Record<number, boolean>
 
 export const fetchAPI = async <ExpectedType = unknown> (
   uri: string,
@@ -60,11 +68,49 @@ const fetchOrdersFresh = async (whId: number): Promise<Order[]> => {
   })
 }
 
+interface OrdersCachePayload {
+  orders: Order[]
+  firstOrderId: number | null
+}
+
+const fetchOrdersPage1 = async (whId: number): Promise<Order[]> => {
+  const data = await fetchAPI<OrderResponse>(`https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`, { page: 1 })
+  return data.orders.filter(o => !o.error)
+}
+
+const fetchOrdersCached = async (whId: number): Promise<Order[]> => {
+  const cached = readCache<OrdersCachePayload>(ordersCacheKey(whId))
+  const withinTtl = cached && Date.now() - cached.timestamp < SEVEN_DAYS_MS
+
+  if (cached && withinTtl) {
+    try {
+      const page1 = await fetchOrdersPage1(whId)
+      const liveFirstId = page1[0]?.id ?? null
+      if (liveFirstId === cached.data.firstOrderId) {
+        ordersServedFromCache[whId] = true
+        return cached.data.orders
+      }
+    } catch (err) {
+      console.warn('Order cache probe failed, serving cached data', err)
+      ordersServedFromCache[whId] = true
+      return cached.data.orders
+    }
+  }
+
+  const orders = await fetchOrdersFresh(whId)
+  writeCache<OrdersCachePayload>(ordersCacheKey(whId), {
+    orders,
+    firstOrderId: orders[0]?.id ?? null,
+  })
+  ordersServedFromCache[whId] = false
+  return orders
+}
+
 export const fetchOrders = async (whId: number): Promise<Order[]> => {
   return await getCachedPromise({
     key: `${whId}-orders`,
     fn: async () => {
-      return await fetchOrdersFresh(whId)
+      return await fetchOrdersCached(whId)
     },
   })
 }
@@ -124,11 +170,30 @@ export const fetchUserReviewsFresh = async (whId: number): Promise<ProductReview
   return userReviews
 }
 
+const fetchUserReviewsCached = async (whId: number): Promise<ProductReview[]> => {
+  // fetchOrders runs the probe and sets ordersServedFromCache[whId] as a side effect.
+  // Calling it (rather than just reading the cache) keeps the orders cache fresh and
+  // ensures fetchUserReviewsFresh below would also hit the same cached orders.
+  await fetchOrders(whId)
+  const ordersFromCache = ordersServedFromCache[whId] === true
+
+  const cached = readCache<ProductReview[]>(reviewsCacheKey(whId))
+  const withinTtl = cached && Date.now() - cached.timestamp < SEVEN_DAYS_MS
+
+  if (cached && withinTtl && ordersFromCache) {
+    return cached.data
+  }
+
+  const reviews = await fetchUserReviewsFresh(whId)
+  writeCache<ProductReview[]>(reviewsCacheKey(whId), reviews)
+  return reviews
+}
+
 export const fetchUserReviews = async (whId: number): Promise<ProductReview[]> => {
   return await getCachedPromise({
     key: `${whId}-reviews`,
     fn: async () => {
-      return await fetchUserReviewsFresh(whId)
+      return await fetchUserReviewsCached(whId)
     },
   })
 }
