@@ -1,5 +1,5 @@
 export const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
-export const CACHE_VERSION = 1
+export const CACHE_VERSION = 2
 
 interface CacheEntry<T> {
   version: number

@@ -1,6 +1,6 @@
 import { type Achievement, type AchievementsResponse } from './apiTypes/achievements'
 import { type MeResponse } from './apiTypes/me'
-import { type Order, type OrderResponse } from './apiTypes/order'
+import { type Counts, type Order, type OrderResponse } from './apiTypes/order'
 import { type Review, type ReviewResponse } from './apiTypes/review'
 import { type DeleteStoreResponse } from './apiTypes/starred-store'
 import { type Drop, type SupplyDropResponse } from './apiTypes/supplyDrop'
@@ -48,34 +48,47 @@ export async function fetchMe (): Promise<MeResponse['user']> {
   return data.user
 }
 
-const fetchOrdersFresh = async (whId: number): Promise<Order[]> => {
+interface OrdersCachePayload {
+  orders: Order[]
+  counts: Counts
+}
+
+// The orders endpoint is sorted by orderStatus, not by date, so a new order
+// does not reliably appear at orders[0] on page 1. The counts object, however,
+// reflects the full order population regardless of sort/pagination, so any
+// new/shipped/cancelled order changes it. We use it as the cache-validity probe.
+const countsMatch = (a: Counts, b: Counts): boolean =>
+  a.active === b.active &&
+  a.history === b.history &&
+  a.service === b.service &&
+  a.cancelled === b.cancelled
+
+const probeOrderCounts = async (whId: number): Promise<Counts> => {
+  const data = await fetchAPI<OrderResponse>(`https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`, { page: 1 })
+  return data.counts
+}
+
+const fetchOrdersFreshWithCounts = async (whId: number): Promise<{ orders: Order[], counts: Counts }> => {
   let page = 1
   const orders = []
+  let counts: Counts = { active: 0, history: 0, service: 0, cancelled: 0 }
 
   while (true) {
-    const params = { page }
-    const data = await fetchAPI<OrderResponse>(`https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`, params)
+    const data = await fetchAPI<OrderResponse>(`https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`, { page })
+    if (page === 1) counts = data.counts
     if (data.orders.length === 0) break
     orders.push(...data.orders)
     page++
   }
 
-  return orders.filter(o => {
+  const filtered = orders.filter(o => {
     if (o.error) {
       console.warn(`Order ${o.id} is considered broken by the API. It will not be included in calculations.`)
     }
     return !o.error
   })
-}
 
-interface OrdersCachePayload {
-  orders: Order[]
-  firstOrderId: number | null
-}
-
-const fetchOrdersPage1 = async (whId: number): Promise<Order[]> => {
-  const data = await fetchAPI<OrderResponse>(`https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`, { page: 1 })
-  return data.orders.filter(o => !o.error)
+  return { orders: filtered, counts }
 }
 
 const fetchOrdersCached = async (whId: number): Promise<Order[]> => {
@@ -84,9 +97,8 @@ const fetchOrdersCached = async (whId: number): Promise<Order[]> => {
 
   if (cached && withinTtl) {
     try {
-      const page1 = await fetchOrdersPage1(whId)
-      const liveFirstId = page1[0]?.id ?? null
-      if (liveFirstId === cached.data.firstOrderId) {
+      const liveCounts = await probeOrderCounts(whId)
+      if (countsMatch(liveCounts, cached.data.counts)) {
         ordersServedFromCache[whId] = true
         return cached.data.orders
       }
@@ -97,11 +109,8 @@ const fetchOrdersCached = async (whId: number): Promise<Order[]> => {
     }
   }
 
-  const orders = await fetchOrdersFresh(whId)
-  writeCache<OrdersCachePayload>(ordersCacheKey(whId), {
-    orders,
-    firstOrderId: orders[0]?.id ?? null,
-  })
+  const { orders, counts } = await fetchOrdersFreshWithCounts(whId)
+  writeCache<OrdersCachePayload>(ordersCacheKey(whId), { orders, counts })
   ordersServedFromCache[whId] = false
   return orders
 }
