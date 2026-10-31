@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/Schanihbg/webhallen-userscript/compare/v1.1.2...v1.2.0) (2026-10-31)
+
+
+### Features
+
+* cache orders and reviews in GM_storage for 7 days ([71c8ec1](https://github.com/Schanihbg/webhallen-userscript/commit/71c8ec15a20f2d830166dee1e9e3c1c08dee32fe))
+
+
+### Bug Fixes
+
+* invalidate order cache by counts, not orders[0].id ([9f8a2c1](https://github.com/Schanihbg/webhallen-userscript/commit/9f8a2c1954a00af652234246f43f9aa3bae0272f))
+
 ## [1.1.2](https://github.com/Schanihbg/webhallen-userscript/compare/v1.1.1...v1.1.2) (2026-02-03)
 
 
