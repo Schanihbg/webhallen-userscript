@@ -455,7 +455,15 @@ async function _clearAndAddStatistics (event: MouseEvent): Promise<void> {
 
   injectPath.appendChild(svg)
 
-  const orders = await fetchOrders(getCachedUser().id)
+  const progressText = document.createElement('div')
+  progressText.className = 'mb-3'
+  injectPath.appendChild(progressText)
+
+  const orders = await fetchOrders(getCachedUser().id, (page, totalPages) => {
+    progressText.innerText = totalPages > 0
+      ? `Hämtar ordrar: sida ${page} av ${totalPages}`
+      : `Hämtar ordrar: sida ${page}`
+  })
   const supplyDrops = await fetchSupplyDrops()
   const achievements = await fetchAchievements(getCachedUser().id)
 

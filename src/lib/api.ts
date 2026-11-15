@@ -6,6 +6,7 @@ import { type DeleteStoreResponse } from './apiTypes/starred-store'
 import { type Drop, type SupplyDropResponse } from './apiTypes/supplyDrop'
 import { readCache, writeCache, SEVEN_DAYS_MS } from './persistentCache'
 import { getCachedPromise } from './promiseCache'
+import { MAX_BACKOFF_MS, MAX_RETRIES, backOff, parseRetryAfter, sleep, throttle } from './rateLimit'
 
 export const ordersCacheKey = (whId: number): string => `orders-v1-${whId}`
 export const reviewsCacheKey = (whId: number): string => `reviews-v1-${whId}`
@@ -28,19 +29,33 @@ export const fetchAPI = async <ExpectedType = unknown> (
       })
   }
 
-  return await fetch(url.toString(), {
-    method,
-    signal: AbortSignal.timeout(30000),
-  })
-    .then(async (response) => {
-      // The API call was successful!
-      return await response.json()
+  for (let attempt = 0; ; attempt++) {
+    await throttle()
+    const response = await fetch(url.toString(), {
+      method,
+      signal: AbortSignal.timeout(30000),
     })
-    .then((jsonData) => {
-      // This is the JSON from our response
-      console.log('callURL resp', jsonData)
-      return jsonData
-    })
+
+    if (response.status === 429) {
+      if (attempt >= MAX_RETRIES) {
+        throw new Error(`HTTP 429 (rate limited) for ${url.toString()} after ${attempt + 1} attempts`)
+      }
+      const retryAfter = parseRetryAfter(response.headers.get('Retry-After'))
+      const delay = Math.min(retryAfter ?? 1000 * 2 ** attempt, MAX_BACKOFF_MS)
+      console.warn(`429 from ${url.pathname}, retrying in ${Math.round(delay / 1000)}s (attempt ${attempt + 1}/${MAX_RETRIES})`)
+      backOff(delay)
+      await sleep(delay)
+      continue
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} for ${url.toString()}`)
+    }
+
+    const jsonData = await response.json()
+    console.log('callURL resp', jsonData)
+    return jsonData
+  }
 }
 
 export async function fetchMe (): Promise<MeResponse['user']> {
@@ -63,22 +78,36 @@ const countsMatch = (a: Counts, b: Counts): boolean =>
   a.service === b.service &&
   a.cancelled === b.cancelled
 
-const probeOrderCounts = async (whId: number): Promise<Counts> => {
-  const data = await fetchAPI<OrderResponse>(`https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`, { page: 1 })
-  return data.counts
-}
+const ORDERS_URL = (whId: number): string =>
+  `https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`
 
-const fetchOrdersFreshWithCounts = async (whId: number): Promise<{ orders: Order[], counts: Counts }> => {
-  let page = 1
-  const orders = []
-  let counts: Counts = { active: 0, history: 0, service: 0, cancelled: 0 }
+const fetchOrdersPage = async (whId: number, page: number): Promise<OrderResponse> =>
+  await fetchAPI<OrderResponse>(ORDERS_URL(whId), { page })
 
-  while (true) {
-    const data = await fetchAPI<OrderResponse>(`https://www.webhallen.com/api/order/user/${whId}?filters[history]=true&sort=orderStatus`, { page })
-    if (page === 1) counts = data.counts
+export type OrdersProgressCallback = (page: number, totalPages: number) => void
+
+// firstPage can be passed in (e.g. from the cache probe) to avoid fetching page 1 twice.
+const fetchOrdersFreshWithCounts = async (
+  whId: number,
+  firstPage?: OrderResponse,
+  onProgress?: OrdersProgressCallback,
+): Promise<{ orders: Order[], counts: Counts }> => {
+  const orders: OrderResponse['orders'] = []
+  const first = firstPage ?? await fetchOrdersPage(whId, 1)
+  const counts: Counts = first.counts
+  const lastPage = first.currentResultPageCount
+  let data = first
+  onProgress?.(1, lastPage)
+
+  for (let page = 1; ; page++) {
+    if (page > 1) {
+      onProgress?.(page, lastPage)
+      data = await fetchOrdersPage(whId, page)
+    }
     if (data.orders.length === 0) break
     orders.push(...data.orders)
-    page++
+    // Stop once we've seen the last page instead of fetching an empty one.
+    if (Number.isFinite(lastPage) && lastPage > 0 && page >= lastPage) break
   }
 
   const filtered = orders.filter(o => {
@@ -91,14 +120,15 @@ const fetchOrdersFreshWithCounts = async (whId: number): Promise<{ orders: Order
   return { orders: filtered, counts }
 }
 
-const fetchOrdersCached = async (whId: number): Promise<Order[]> => {
+const fetchOrdersCached = async (whId: number, onProgress?: OrdersProgressCallback): Promise<Order[]> => {
   const cached = readCache<OrdersCachePayload>(ordersCacheKey(whId))
   const withinTtl = cached && Date.now() - cached.timestamp < SEVEN_DAYS_MS
 
+  let firstPage: OrderResponse | undefined
   if (cached && withinTtl) {
     try {
-      const liveCounts = await probeOrderCounts(whId)
-      if (countsMatch(liveCounts, cached.data.counts)) {
+      firstPage = await fetchOrdersPage(whId, 1)
+      if (countsMatch(firstPage.counts, cached.data.counts)) {
         ordersServedFromCache[whId] = true
         return cached.data.orders
       }
@@ -109,17 +139,17 @@ const fetchOrdersCached = async (whId: number): Promise<Order[]> => {
     }
   }
 
-  const { orders, counts } = await fetchOrdersFreshWithCounts(whId)
+  const { orders, counts } = await fetchOrdersFreshWithCounts(whId, firstPage, onProgress)
   writeCache<OrdersCachePayload>(ordersCacheKey(whId), { orders, counts })
   ordersServedFromCache[whId] = false
   return orders
 }
 
-export const fetchOrders = async (whId: number): Promise<Order[]> => {
+export const fetchOrders = async (whId: number, onProgress?: OrdersProgressCallback): Promise<Order[]> => {
   return await getCachedPromise({
     key: `${whId}-orders`,
     fn: async () => {
-      return await fetchOrdersCached(whId)
+      return await fetchOrdersCached(whId, onProgress)
     },
   })
 }
@@ -225,11 +255,14 @@ export interface ProductData {
 }
 export async function fetchProductData (productId: string | number): Promise<ProductData | null> {
   try {
-    const url = new URL(`/api/product/${productId}`, 'https://www.webhallen.com')
-    const { product } = await fetch(url)
-      .then(async (response) => {
-        return await response.json()
-      })
+    const { product } = await fetchAPI<{
+      product?: {
+        id: number
+        name: string
+        thumbnail: string
+        data?: Record<string, Record<string, { value: string }>>
+      }
+    }>(`https://www.webhallen.com/api/product/${encodeURIComponent(productId)}`)
 
     if (!product?.data) {
       console.warn(`Article ${productId} does not contain any data to compare against.`)
