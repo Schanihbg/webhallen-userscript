@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/Schanihbg/webhallen-userscript/compare/v1.2.0...v1.2.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* handle Cloudflare 429s when fetching orders ([9409496](https://github.com/Schanihbg/webhallen-userscript/commit/94094969f1c00a5ff328efdc1b3dc7a34bb545b2))
+
 ## [1.2.0](https://github.com/Schanihbg/webhallen-userscript/compare/v1.1.2...v1.2.0) (2026-10-31)
 
 
